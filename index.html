@@ -2,1474 +2,884 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#123c2c">
-  <title>GFC CHANDA COLLECTION 2026</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Arial, "Noto Sans Bengali", sans-serif;
-      background: #e8eee9;
-      color: #17251d;
-      overflow-x: hidden;
-    }
-
-    button, input {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-      border: 0;
-    }
-
-    .app {
-      width: 100%;
-      max-width: 520px;
-      min-height: 100vh;
-      margin: auto;
-      background: #f5f8f5;
-      box-shadow: 0 0 25px rgba(0,0,0,.09);
-      overflow: hidden;
-    }
-
-    .header {
-      background: linear-gradient(135deg, #123c2c, #18734b);
-      color: white;
-      padding: 27px 18px 25px;
-      text-align: center;
-      border-radius: 0 0 25px 25px;
-    }
-
-    .logo {
-      width: 65px;
-      height: 65px;
-      margin: 0 auto 10px;
-      border-radius: 50%;
-      background: #fff;
-      color: #145638;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 23px;
-      font-weight: 900;
-      border: 3px solid #d7f5df;
-    }
-
-    .header h1 {
-      font-size: 22px;
-      line-height: 1.4;
-      font-weight: 900;
-    }
-
-    .header p {
-      margin-top: 5px;
-      font-size: 13px;
-      opacity: .9;
-    }
-
-    .live {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 13px;
-      padding: 6px 12px;
-      background: rgba(255,255,255,.15);
-      border: 1px solid rgba(255,255,255,.3);
-      border-radius: 30px;
-      font-size: 11px;
-    }
-
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #63ff9c;
-      box-shadow: 0 0 8px #63ff9c;
-    }
-
-    .content {
-      padding: 15px;
-    }
-
-    .section {
-      margin-bottom: 16px;
-      background: white;
-      padding: 15px;
-      border-radius: 17px;
-      box-shadow: 0 3px 13px rgba(0,0,0,.045);
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 13px;
-      color: #183d2b;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .stat {
-      background: white;
-      padding: 14px 12px;
-      border-radius: 15px;
-      box-shadow: 0 3px 13px rgba(0,0,0,.045);
-      min-width: 0;
-    }
-
-    .stat-label {
-      color: #69776e;
-      font-size: 12px;
-      margin-bottom: 7px;
-    }
-
-    .stat-value {
-      font-size: 21px;
-      font-weight: 900;
-      color: #174d32;
-      overflow-wrap: anywhere;
-    }
-
-    .stat small {
-      font-size: 11px;
-      color: #718077;
-    }
-
-    .progress-track {
-      height: 13px;
-      width: 100%;
-      background: #e5eee8;
-      border-radius: 20px;
-      overflow: hidden;
-      margin: 12px 0 8px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #159957, #38c878);
-      border-radius: 20px;
-      transition: width .4s ease;
-    }
-
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 12px;
-      color: #637269;
-    }
-
-    .field {
-      margin-bottom: 11px;
-    }
-
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #405347;
-    }
-
-    .field input {
-      width: 100%;
-      min-height: 46px;
-      padding: 11px 12px;
-      border: 1px solid #dce5de;
-      border-radius: 11px;
-      background: #fbfdfb;
-      outline: none;
-      font-size: 15px;
-    }
-
-    .field input:focus {
-      border-color: #22975a;
-      box-shadow: 0 0 0 3px rgba(34,151,90,.1);
-    }
-
-    .btn {
-      min-height: 44px;
-      padding: 11px 15px;
-      border-radius: 11px;
-      font-weight: 800;
-      font-size: 13px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .btn-primary {
-      background: #176b42;
-      color: white;
-    }
-
-    .btn-dark {
-      background: #193e2d;
-      color: white;
-    }
-
-    .btn-light {
-      background: #eaf4ed;
-      color: #176b42;
-    }
-
-    .btn-danger {
-      background: #fff0ef;
-      color: #bd302b;
-    }
-
-    .btn-small {
-      min-height: 36px;
-      padding: 8px 10px;
-      font-size: 11px;
-      border-radius: 9px;
-    }
-
-    .btn-full {
-      width: 100%;
-    }
-
-    .admin-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .admin-top strong {
-      color: #176b42;
-      font-size: 14px;
-    }
-
-    .notice {
-      padding: 11px;
-      background: #f0f7f2;
-      color: #47604f;
-      border-radius: 10px;
-      font-size: 12px;
-      line-height: 1.6;
-      margin-bottom: 12px;
-    }
-
-    .search {
-      width: 100%;
-      min-height: 44px;
-      border: 1px solid #dce5de;
-      border-radius: 11px;
-      padding: 10px 12px;
-      font-size: 14px;
-      outline: none;
-      background: white;
-    }
-
-    .donor-list {
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-    }
-
-    .donor-card {
-      background: white;
-      border: 1px solid #e5ece7;
-      border-radius: 15px;
-      padding: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.035);
-    }
-
-    .donor-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .donor-name {
-      font-size: 16px;
-      font-weight: 900;
-      color: #193e2d;
-      overflow-wrap: anywhere;
-    }
-
-    .donor-number {
-      color: #89968d;
-      font-size: 10px;
-      margin-top: 4px;
-    }
-
-    .status {
-      white-space: nowrap;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 6px 9px;
-      border-radius: 30px;
-    }
-
-    .status-paid {
-      background: #e4f8eb;
-      color: #16713c;
-    }
-
-    .status-pending {
-      background: #fff4df;
-      color: #9b6410;
-    }
-
-    .donor-data {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 7px;
-      margin-bottom: 11px;
-    }
-
-    .data-box {
-      background: #f4f8f5;
-      border-radius: 10px;
-      padding: 9px 7px;
-      min-width: 0;
-    }
-
-    .data-box span {
-      display: block;
-      font-size: 10px;
-      color: #78867d;
-      margin-bottom: 5px;
-    }
-
-    .data-box strong {
-      font-size: 13px;
-      color: #1b4930;
-      overflow-wrap: anywhere;
-    }
-
-    .phone-line {
-      font-size: 12px;
-      color: #66756b;
-      margin: 0 0 11px;
-    }
-
-    .donor-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-
-    .donor-actions button {
-      flex: 1 1 auto;
-    }
-
-    .payment-entry {
-      display: none;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #e8eee9;
-    }
-
-    .payment-entry.show {
-      display: block;
-    }
-
-    .payment-entry .field {
-      margin-bottom: 8px;
-    }
-
-    .history {
-      display: none;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #e8eee9;
-    }
-
-    .history.show {
-      display: block;
-    }
-
-    .history-title {
-      font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: #405347;
-    }
-
-    .history-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f3f0;
-      font-size: 12px;
-    }
-
-    .history-row:last-child {
-      border-bottom: 0;
-    }
-
-    .history-row strong {
-      color: #176b42;
-    }
-
-    .empty {
-      text-align: center;
-      padding: 25px 10px;
-      color: #849087;
-      font-size: 13px;
-    }
-
-    .payment-summary {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid #edf1ed;
-    }
-
-    .payment-summary:last-child {
-      border-bottom: 0;
-    }
-
-    .payment-summary strong {
-      color: #176b42;
-    }
-
-    .footer {
-      text-align: center;
-      color: #849087;
-      font-size: 11px;
-      padding: 10px 15px 25px;
-      line-height: 1.7;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .message {
-      margin-top: 10px;
-      font-size: 12px;
-      line-height: 1.5;
-      overflow-wrap: anywhere;
-    }
-
-    .message.error {
-      color: #c0392b;
-    }
-
-    .message.success {
-      color: #16713c;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .toolbar button {
-      flex: 1;
-    }
-
-    @media (max-width: 360px) {
-      .content {
-        padding: 11px;
-      }
-
-      .stat-value {
-        font-size: 18px;
-      }
-
-      .donor-data {
-        gap: 5px;
-      }
-
-      .data-box strong {
-        font-size: 12px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#123c2c">
+<title>GFC CHANDA COLLECTION 2026</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,"Noto Sans Bengali",sans-serif;
+  background:#e8eee9;color:#17251d;overflow-x:hidden
+}
+button,input{font:inherit}
+button{cursor:pointer;border:0}
+.app{
+  width:100%;max-width:520px;min-height:100vh;
+  margin:auto;background:#f5f8f5;
+  box-shadow:0 0 25px rgba(0,0,0,.09);overflow:hidden
+}
+.header{
+  background:linear-gradient(135deg,#123c2c,#18734b);
+  color:white;padding:27px 18px 25px;text-align:center;
+  border-radius:0 0 25px 25px
+}
+.logo{
+  width:65px;height:65px;margin:0 auto 10px;
+  border-radius:50%;background:#fff;color:#145638;
+  display:flex;align-items:center;justify-content:center;
+  font-size:23px;font-weight:900;border:3px solid #d7f5df
+}
+.header h1{font-size:22px;line-height:1.4;font-weight:900}
+.header p{margin-top:5px;font-size:13px;opacity:.9}
+.live{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:13px;padding:6px 12px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:30px;font-size:11px
+}
+.live-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:#63ff9c;box-shadow:0 0 8px #63ff9c
+}
+.content{padding:15px}
+.section{
+  margin-bottom:16px;background:white;padding:15px;
+  border-radius:17px;box-shadow:0 3px 13px rgba(0,0,0,.045)
+}
+.section-title{
+  font-size:16px;font-weight:800;margin-bottom:13px;color:#183d2b
+}
+.stats{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:15px
+}
+.stat{
+  background:white;padding:14px 12px;border-radius:15px;
+  box-shadow:0 3px 13px rgba(0,0,0,.045);min-width:0
+}
+.stat-label{color:#69776e;font-size:12px;margin-bottom:7px}
+.stat-value{
+  font-size:21px;font-weight:900;color:#174d32;
+  overflow-wrap:anywhere
+}
+.stat small{font-size:11px;color:#718077}
+.progress-track{
+  height:13px;width:100%;background:#e5eee8;
+  border-radius:20px;overflow:hidden;margin:12px 0 8px
+}
+.progress-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#159957,#38c878);
+  border-radius:20px;transition:width .4s ease
+}
+.progress-info{
+  display:flex;justify-content:space-between;gap:8px;
+  font-size:12px;color:#637269
+}
+.field{margin-bottom:11px}
+.field label{
+  display:block;font-size:12px;font-weight:700;
+  margin-bottom:6px;color:#405347
+}
+.field input{
+  width:100%;min-height:46px;padding:11px 12px;
+  border:1px solid #dce5de;border-radius:11px;
+  background:#fbfdfb;outline:none;font-size:15px
+}
+.field input:focus{
+  border-color:#22975a;
+  box-shadow:0 0 0 3px rgba(34,151,90,.1)
+}
+.btn{
+  min-height:44px;padding:11px 15px;border-radius:11px;
+  font-weight:800;font-size:13px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px
+}
+.btn-primary{background:#176b42;color:white}
+.btn-dark{background:#193e2d;color:white}
+.btn-light{background:#eaf4ed;color:#176b42}
+.btn-danger{background:#fff0ef;color:#bd302b}
+.btn-small{min-height:36px;padding:8px 10px;font-size:11px;border-radius:9px}
+.btn-full{width:100%}
+.admin-top{
+  display:flex;justify-content:space-between;
+  align-items:center;gap:10px;margin-bottom:12px
+}
+.admin-top strong{color:#176b42;font-size:14px}
+.notice{
+  padding:11px;background:#f0f7f2;color:#47604f;
+  border-radius:10px;font-size:12px;line-height:1.6;margin-bottom:12px
+}
+.search{
+  width:100%;min-height:44px;border:1px solid #dce5de;
+  border-radius:11px;padding:10px 12px;font-size:14px;
+  outline:none;background:white
+}
+.donor-list{display:flex;flex-direction:column;gap:11px}
+.donor-card{
+  background:white;border:1px solid #e5ece7;
+  border-radius:15px;padding:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.035)
+}
+.donor-head{
+  display:flex;justify-content:space-between;
+  align-items:flex-start;gap:8px;margin-bottom:12px
+}
+.donor-name{
+  font-size:16px;font-weight:900;color:#193e2d;
+  overflow-wrap:anywhere
+}
+.donor-number{color:#89968d;font-size:10px;margin-top:4px}
+.status{
+  white-space:nowrap;font-size:10px;font-weight:800;
+  padding:6px 9px;border-radius:30px
+}
+.status-paid{background:#e4f8eb;color:#16713c}
+.status-pending{background:#fff4df;color:#9b6410}
+.donor-data{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;margin-bottom:11px
+}
+.data-box{background:#f4f8f5;border-radius:10px;padding:9px 7px;min-width:0}
+.data-box span{display:block;font-size:10px;color:#78867d;margin-bottom:5px}
+.data-box strong{font-size:13px;color:#1b4930;overflow-wrap:anywhere}
+.phone-line{font-size:12px;color:#66756b;margin:0 0 11px}
+.donor-actions{display:flex;flex-wrap:wrap;gap:7px}
+.donor-actions button{flex:1 1 auto}
+.payment-entry{
+  display:none;margin-top:12px;padding-top:12px;
+  border-top:1px solid #e8eee9
+}
+.payment-entry.show{display:block}
+.history{
+  display:none;margin-top:12px;padding-top:10px;
+  border-top:1px solid #e8eee9
+}
+.history.show{display:block}
+.history-title{font-size:12px;font-weight:800;margin-bottom:8px;color:#405347}
+.history-row{
+  display:flex;justify-content:space-between;gap:8px;
+  align-items:center;padding:8px 0;
+  border-bottom:1px solid #f0f3f0;font-size:12px
+}
+.history-row:last-child{border-bottom:0}
+.history-row strong{color:#176b42}
+.empty{text-align:center;padding:25px 10px;color:#849087;font-size:13px}
+.payment-summary{
+  display:flex;justify-content:space-between;
+  align-items:center;gap:10px;font-size:12px;
+  padding:10px 0;border-bottom:1px solid #edf1ed
+}
+.payment-summary:last-child{border-bottom:0}
+.payment-summary strong{color:#176b42}
+.footer{
+  text-align:center;color:#849087;font-size:11px;
+  padding:10px 15px 25px;line-height:1.7
+}
+.hidden{display:none!important}
+.message{margin-top:10px;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.message.error{color:#c0392b}
+.message.success{color:#16713c}
+.toolbar{display:flex;gap:8px;margin-top:10px}
+.toolbar button{flex:1}
+@media(max-width:360px){
+  .content{padding:11px}
+  .stat-value{font-size:18px}
+  .donor-data{gap:5px}
+  .data-box strong{font-size:12px}
+}
+</style>
 </head>
 
 <body>
 <div class="app">
 
-  <header class="header">
-    <div class="logo">GFC</div>
-    <h1>GFC CHANDA COLLECTION 2026</h1>
-    <p>একসাথে এগিয়ে চলি, GFC-কে আরও শক্তিশালী করি</p>
-    <div class="live">
-      <span class="live-dot"></span>
-      LIVE COLLECTION
+<header class="header">
+  <div class="logo">GFC</div>
+  <h1>GFC CHANDA COLLECTION 2026</h1>
+  <p>একসাথে এগিয়ে চলি, GFC-কে আরও শক্তিশালী করি</p>
+  <div class="live">
+    <span class="live-dot"></span>
+    LIVE COLLECTION
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- COLLECTION SUMMARY -->
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-label">মোট প্রতিশ্রুত চাঁদা</div>
+      <div class="stat-value" id="pledgedTotal">₹0</div>
     </div>
-  </header>
+    <div class="stat">
+      <div class="stat-label">মোট জমা</div>
+      <div class="stat-value" id="collectedTotal">₹0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">বাকি টাকা</div>
+      <div class="stat-value" id="pendingTotal">₹0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">মোট Donor</div>
+      <div class="stat-value" id="donorCount">0</div>
+    </div>
+  </section>
 
-  <main class="content">
+  <!-- TARGET -->
+  <section class="section">
+    <div class="section-title">🎯 Collection Target</div>
+    <div class="progress-info">
+      <span>Target: ₹50,000</span>
+      <strong id="progressPercent">0%</strong>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-info">
+      <span>জমা: <strong id="progressCollected">₹0</strong></span>
+      <span>বাকি: <strong id="targetRemaining">₹50,000</strong></span>
+    </div>
+  </section>
 
-    <!-- COLLECTION SUMMARY -->
-    <section class="stats">
-      <div class="stat">
-        <div class="stat-label">মোট প্রতিশ্রুত চাঁদা</div>
-        <div class="stat-value" id="pledgedTotal">₹0</div>
+  <!-- ADMIN PANEL: LOGIN করার পরে দেখা যাবে -->
+  <section class="section hidden" id="adminSection">
+    <div class="admin-top">
+      <strong>✅ Admin Panel Active</strong>
+      <button class="btn btn-danger btn-small" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="section-title">➕ নতুন Donor যোগ করুন</div>
+
+    <form id="donorForm">
+      <div class="field">
+        <label>Donor-এর নাম</label>
+        <input type="text" id="donorName" placeholder="সম্পূর্ণ নাম লিখুন" required>
       </div>
 
-      <div class="stat">
-        <div class="stat-label">মোট জমা</div>
-        <div class="stat-value" id="collectedTotal">₹0</div>
+      <div class="field">
+        <label>মোবাইল নম্বর (ঐচ্ছিক)</label>
+        <input type="tel" id="donorPhone" placeholder="মোবাইল নম্বর" inputmode="numeric">
       </div>
 
-      <div class="stat">
-        <div class="stat-label">বাকি টাকা</div>
-        <div class="stat-value" id="pendingTotal">₹0</div>
+      <div class="field">
+        <label>মোট প্রতিশ্রুত চাঁদা (₹)</label>
+        <input type="number" id="donorAmount" min="0" step="0.01" placeholder="যেমন 1000" required>
       </div>
 
-      <div class="stat">
-        <div class="stat-label">মোট Donor</div>
-        <div class="stat-value" id="donorCount">0</div>
-      </div>
-    </section>
+      <button class="btn btn-primary btn-full" type="submit">Donor যোগ করুন</button>
+      <div id="donorMessage" class="message"></div>
+    </form>
 
-    <!-- TARGET -->
-    <section class="section">
-      <div class="section-title">🎯 Collection Target</div>
-      <div class="progress-info">
-        <span>Target: ₹50,000</span>
-        <strong id="progressPercent">0%</strong>
-      </div>
+    <div class="toolbar">
+      <button class="btn btn-light" id="csvBtn">⬇ CSV Download</button>
+      <button class="btn btn-light" id="refreshBtn">↻ Refresh</button>
+    </div>
+  </section>
 
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+  <!-- DONOR LIST -->
+  <section class="section">
+    <div class="section-title">👥 Donor List</div>
+    <input class="search" type="search" id="searchInput" placeholder="Donor-এর নাম দিয়ে খুঁজুন...">
+    <div style="height:12px"></div>
+    <div class="donor-list" id="donorList">
+      <div class="empty">তথ্য লোড হচ্ছে...</div>
+    </div>
+  </section>
 
-      <div class="progress-info">
-        <span>জমা: <strong id="progressCollected">₹0</strong></span>
-        <span>বাকি: <strong id="targetRemaining">₹50,000</strong></span>
-      </div>
-    </section>
+  <!-- PAYMENT HISTORY -->
+  <section class="section">
+    <div class="section-title">💰 সাম্প্রতিক Payment History</div>
+    <div id="paymentHistory">
+      <div class="empty">Payment History লোড হচ্ছে...</div>
+    </div>
+  </section>
 
-    <!-- ADMIN LOGIN -->
-    <section class="section" id="loginSection">
-      <div class="section-title">🔐 Admin Login</div>
+  <!-- ADMIN LOGIN: একদম নিচে -->
+  <section class="section" id="loginSection">
+    <div class="section-title">🔐 Admin Login</div>
+    <div class="notice">
+      শুধুমাত্র অনুমোদিত Admin Donor যোগ করা, টাকা জমা ও তথ্য পরিবর্তন করতে পারবেন।
+    </div>
 
-      <div class="notice">
-        শুধুমাত্র অনুমোদিত Admin Donor যোগ করা, টাকা জমা ও তথ্য পরিবর্তন করতে পারবেন।
-      </div>
-
-      <form id="loginForm">
-        <div class="field">
-          <label>Admin Email</label>
-          <input
-            type="email"
-            id="adminEmail"
-            value="officework.bolpur@gmail.com"
-            readonly
-          >
-        </div>
-
-        <div class="field">
-          <label>Password</label>
-          <input
-            type="password"
-            id="adminPassword"
-            placeholder="Password"
-            required
-          >
-        </div>
-
-        <button class="btn btn-primary btn-full" type="submit">
-          Admin Login
-        </button>
-
-        <div id="loginMessage" class="message"></div>
-      </form>
-    </section>
-
-    <!-- ADMIN PANEL -->
-    <section class="section hidden" id="adminSection">
-      <div class="admin-top">
-        <strong>✅ Admin Panel Active</strong>
-        <button class="btn btn-danger btn-small" id="logoutBtn">
-          Logout
-        </button>
+    <form id="loginForm">
+      <div class="field">
+        <label>Admin Email</label>
+        <input type="email" id="adminEmail" value="officework.bolpur@gmail.com" readonly>
       </div>
 
-      <div class="section-title">➕ নতুন Donor যোগ করুন</div>
-
-      <form id="donorForm">
-        <div class="field">
-          <label>Donor-এর নাম</label>
-          <input
-            type="text"
-            id="donorName"
-            placeholder="সম্পূর্ণ নাম লিখুন"
-            required
-          >
-        </div>
-
-        <div class="field">
-          <label>মোবাইল নম্বর (ঐচ্ছিক)</label>
-          <input
-            type="tel"
-            id="donorPhone"
-            placeholder="মোবাইল নম্বর"
-            inputmode="numeric"
-          >
-        </div>
-
-        <div class="field">
-          <label>মোট প্রতিশ্রুত চাঁদা (₹)</label>
-          <input
-            type="number"
-            id="donorAmount"
-            min="0"
-            step="0.01"
-            placeholder="যেমন 1000"
-            required
-          >
-        </div>
-
-        <button class="btn btn-primary btn-full" type="submit">
-          Donor যোগ করুন
-        </button>
-
-        <div id="donorMessage" class="message"></div>
-      </form>
-
-      <div class="toolbar">
-        <button class="btn btn-light" id="csvBtn">⬇ CSV Download</button>
-        <button class="btn btn-light" id="refreshBtn">↻ Refresh</button>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="adminPassword"
+          placeholder="আপনার Supabase Admin Password" required>
       </div>
-    </section>
 
-    <!-- DONOR LIST -->
-    <section class="section">
-      <div class="section-title">👥 Donor List</div>
+      <button class="btn btn-primary btn-full" type="submit">Admin Login</button>
+      <div id="loginMessage" class="message"></div>
+    </form>
+  </section>
 
-      <input
-        class="search"
-        type="search"
-        id="searchInput"
-        placeholder="Donor-এর নাম দিয়ে খুঁজুন..."
-      >
+</main>
 
-      <div style="height:12px"></div>
-      <div class="donor-list" id="donorList">
-        <div class="empty">তথ্য লোড হচ্ছে...</div>
-      </div>
-    </section>
-
-    <!-- PAYMENT HISTORY -->
-    <section class="section">
-      <div class="section-title">💰 সাম্প্রতিক Payment History</div>
-      <div id="paymentHistory">
-        <div class="empty">Payment History লোড হচ্ছে...</div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <strong>GFC CHANDA COLLECTION 2026</strong><br>
-    Collection data securely managed by GFC.<br>
-    © 2026 GFC. All Rights Reserved.
-  </footer>
+<footer class="footer">
+  <strong>GFC CHANDA COLLECTION 2026</strong><br>
+  Collection data securely managed by Supabase.<br>
+  © 2026 GFC. All Rights Reserved.
+</footer>
 
 </div>
 
 <script>
-  // ==========================================
-  // SUPABASE CONFIGURATION
-  // ==========================================
+const SUPABASE_URL = "https://ueqhecvvniywwmtrydcp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_mPujg0FYaGLe3kqUryJerQ_kSzPUAHd";
+const ADMIN_EMAIL = "officework.bolpur@gmail.com";
+const TARGET = 50000;
 
-  const SUPABASE_URL =
-    "https://ueqhecvvniywwmtrydcp.supabase.co";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const SUPABASE_KEY =
-    "sb_publishable_mPujg0FYaGLe3kqUryJerQ_kSzPUAHd";
+let isAdmin = false;
+let donors = [];
+let payments = [];
+let loading = false;
+let realtimeChannel = null;
 
-  const ADMIN_EMAIL =
-    "officework.bolpur@gmail.com";
+const $ = id => document.getElementById(id);
 
-  const TARGET = 50000;
+function money(value) {
+  return "₹" + Number(value || 0).toLocaleString("en-IN", {
+    maximumFractionDigits: 2
+  });
+}
 
-  const db = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
+function showMessage(id, message, type = "success") {
+  const el = $(id);
+  el.textContent = message;
+  el.className = "message " + type;
+}
+
+function makeElement(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined && text !== null) el.textContent = text;
+  return el;
+}
+
+function todayDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+function getPaid(donorId) {
+  return payments
+    .filter(p => p.donor_id === donorId)
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+}
+
+function getDue(donor) {
+  return Math.max(0, Number(donor.pledged_amount || 0) - getPaid(donor.id));
+}
+
+// LOAD DATA
+async function loadData() {
+  if (loading) return;
+  loading = true;
+
+  try {
+    let donorQuery;
+
+    if (isAdmin) {
+      donorQuery = db.from("donors")
+        .select("id,name,phone,pledged_amount,created_at")
+        .order("created_at", { ascending: false });
+    } else {
+      donorQuery = db.from("public_donors")
+        .select("id,name,pledged_amount,created_at")
+        .order("created_at", { ascending: false });
+    }
+
+    const [donorResult, paymentResult] = await Promise.all([
+      donorQuery,
+      db.from("payments")
+        .select("id,donor_id,amount,paid_on,created_at")
+        .order("paid_on", { ascending: false })
+    ]);
+
+    if (donorResult.error) throw donorResult.error;
+    if (paymentResult.error) throw paymentResult.error;
+
+    donors = donorResult.data || [];
+    payments = paymentResult.data || [];
+    renderAll();
+
+  } catch (error) {
+    console.error(error);
+    $("donorList").textContent = "তথ্য লোড করা যায়নি: " + error.message;
+  } finally {
+    loading = false;
+  }
+}
+
+// SUMMARY
+function renderSummary() {
+  const pledged = donors.reduce((sum, d) => sum + Number(d.pledged_amount || 0), 0);
+  const collected = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const pending = Math.max(0, pledged - collected);
+  const percent = Math.min(100, (collected / TARGET) * 100);
+
+  $("pledgedTotal").textContent = money(pledged);
+  $("collectedTotal").textContent = money(collected);
+  $("pendingTotal").textContent = money(pending);
+  $("donorCount").textContent = donors.length;
+  $("progressPercent").textContent = percent.toFixed(1) + "%";
+  $("progressFill").style.width = percent + "%";
+  $("progressCollected").textContent = money(collected);
+  $("targetRemaining").textContent = money(Math.max(0, TARGET - collected));
+}
+
+// DONOR CARDS
+function renderDonors() {
+  const container = $("donorList");
+  container.replaceChildren();
+
+  const search = $("searchInput").value.trim().toLowerCase();
+  const filtered = donors.filter(d =>
+    String(d.name || "").toLowerCase().includes(search)
   );
 
-  // ==========================================
-  // APP STATE
-  // ==========================================
+  if (!filtered.length) {
+    container.appendChild(makeElement("div", "empty", "কোনও Donor পাওয়া যায়নি।"));
+    return;
+  }
 
-  let isAdmin = false;
-  let donors = [];
-  let payments = [];
-  let loading = false;
-  let realtimeChannel = null;
+  filtered.forEach((donor, index) => {
+    const paid = getPaid(donor.id);
+    const due = getDue(donor);
+    const pledged = Number(donor.pledged_amount || 0);
 
-  const $ = (id) => document.getElementById(id);
+    const card = makeElement("article", "donor-card");
+    const head = makeElement("div", "donor-head");
+    const nameBox = makeElement("div");
 
-  function money(value) {
-    return "₹" + Number(value || 0).toLocaleString("en-IN", {
-      maximumFractionDigits: 2
+    nameBox.appendChild(makeElement("div", "donor-name", donor.name));
+    nameBox.appendChild(makeElement("div", "donor-number", "Donor #" + (donors.length - index)));
+
+    const status = makeElement(
+      "span",
+      "status " + (due <= 0 ? "status-paid" : "status-pending"),
+      due <= 0 ? "সম্পূর্ণ জমা" : "বাকি আছে"
+    );
+
+    head.append(nameBox, status);
+    card.appendChild(head);
+
+    const data = makeElement("div", "donor-data");
+
+    [
+      ["প্রতিশ্রুত", money(pledged)],
+      ["জমা", money(paid)],
+      ["বাকি", money(due)]
+    ].forEach(([label, value]) => {
+      const box = makeElement("div", "data-box");
+      box.appendChild(makeElement("span", "", label));
+      box.appendChild(makeElement("strong", "", value));
+      data.appendChild(box);
     });
-  }
 
-  function showMessage(id, message, type = "success") {
-    const el = $(id);
-    el.textContent = message;
-    el.className = "message " + type;
-  }
+    card.appendChild(data);
 
-  function makeElement(tag, className, text) {
-    const el = document.createElement(tag);
-
-    if (className) {
-      el.className = className;
+    if (isAdmin && donor.phone) {
+      card.appendChild(makeElement("div", "phone-line", "📞 " + donor.phone));
     }
 
-    if (text !== undefined && text !== null) {
-      el.textContent = text;
-    }
+    if (isAdmin) {
+      const actions = makeElement("div", "donor-actions");
 
-    return el;
-  }
+      const paymentBtn = makeElement("button", "btn btn-primary btn-small", "＋ টাকা জমা");
+      paymentBtn.type = "button";
 
-  function todayDate() {
-    const now = new Date();
-    const local = new Date(
-      now.getTime() - now.getTimezoneOffset() * 60000
-    );
-    return local.toISOString().slice(0, 10);
-  }
+      const historyBtn = makeElement("button", "btn btn-light btn-small", "Payment History");
+      historyBtn.type = "button";
 
-  function getPaid(donorId) {
-    return payments
-      .filter(p => p.donor_id === donorId)
-      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
-  }
+      const deleteBtn = makeElement("button", "btn btn-danger btn-small", "Delete Donor");
+      deleteBtn.type = "button";
 
-  function getDue(donor) {
-    return Math.max(
-      0,
-      Number(donor.pledged_amount || 0) - getPaid(donor.id)
-    );
-  }
+      actions.append(paymentBtn, historyBtn, deleteBtn);
+      card.appendChild(actions);
 
-  // ==========================================
-  // LOAD DATABASE
-  // ==========================================
+      const paymentForm = makeElement("div", "payment-entry");
 
-  async function loadData() {
-    if (loading) return;
-    loading = true;
+      const amountField = makeElement("div", "field");
+      amountField.appendChild(makeElement("label", "", "জমার পরিমাণ (₹)"));
 
-    try {
-      let donorQuery;
+      const amountInput = makeElement("input");
+      amountInput.type = "number";
+      amountInput.min = "0.01";
+      amountInput.step = "0.01";
+      amountInput.placeholder = "টাকার পরিমাণ";
+      amountInput.inputMode = "decimal";
+      amountField.appendChild(amountInput);
 
-      if (isAdmin) {
-        donorQuery = db
-          .from("donors")
-          .select("id,name,phone,pledged_amount,created_at")
-          .order("created_at", { ascending: false });
-      } else {
-        donorQuery = db
-          .from("public_donors")
-          .select("id,name,pledged_amount,created_at")
-          .order("created_at", { ascending: false });
-      }
+      const dateField = makeElement("div", "field");
+      dateField.appendChild(makeElement("label", "", "জমার তারিখ"));
 
-      const [donorResult, paymentResult] = await Promise.all([
-        donorQuery,
-        db
-          .from("payments")
-          .select("id,donor_id,amount,paid_on,created_at")
-          .order("paid_on", { ascending: false })
-      ]);
+      const dateInput = makeElement("input");
+      dateInput.type = "date";
+      dateInput.value = todayDate();
+      dateField.appendChild(dateInput);
 
-      if (donorResult.error) throw donorResult.error;
-      if (paymentResult.error) throw paymentResult.error;
+      const savePayment = makeElement("button", "btn btn-primary btn-full", "Payment Save করুন");
+      savePayment.type = "button";
 
-      donors = donorResult.data || [];
-      payments = paymentResult.data || [];
+      savePayment.addEventListener("click", async () => {
+        const amount = Number(amountInput.value);
+        const date = dateInput.value;
 
-      renderAll();
-
-    } catch (error) {
-      console.error(error);
-      $("donorList").textContent =
-        "তথ্য লোড করা যায়নি: " + error.message;
-    } finally {
-      loading = false;
-    }
-  }
-
-  // ==========================================
-  // RENDER SUMMARY
-  // ==========================================
-
-  function renderSummary() {
-    const pledged = donors.reduce(
-      (sum, d) => sum + Number(d.pledged_amount || 0),
-      0
-    );
-
-    const collected = payments.reduce(
-      (sum, p) => sum + Number(p.amount || 0),
-      0
-    );
-
-    const pending = Math.max(0, pledged - collected);
-    const percent = Math.min(100, (collected / TARGET) * 100);
-
-    $("pledgedTotal").textContent = money(pledged);
-    $("collectedTotal").textContent = money(collected);
-    $("pendingTotal").textContent = money(pending);
-    $("donorCount").textContent = donors.length;
-
-    $("progressPercent").textContent =
-      percent.toFixed(1) + "%";
-
-    $("progressFill").style.width =
-      percent + "%";
-
-    $("progressCollected").textContent =
-      money(collected);
-
-    $("targetRemaining").textContent =
-      money(Math.max(0, TARGET - collected));
-  }
-
-  // ==========================================
-  // DONOR CARD
-  // ==========================================
-
-  function renderDonors() {
-    const container = $("donorList");
-    container.replaceChildren();
-
-    const search = $("searchInput").value
-      .trim()
-      .toLowerCase();
-
-    const filtered = donors.filter(d =>
-      String(d.name || "").toLowerCase().includes(search)
-    );
-
-    if (!filtered.length) {
-      container.appendChild(
-        makeElement("div", "empty", "কোনও Donor পাওয়া যায়নি।")
-      );
-      return;
-    }
-
-    filtered.forEach((donor, index) => {
-      const paid = getPaid(donor.id);
-      const due = getDue(donor);
-      const pledged = Number(donor.pledged_amount || 0);
-
-      const card = makeElement("article", "donor-card");
-
-      const head = makeElement("div", "donor-head");
-      const nameBox = makeElement("div");
-
-      nameBox.appendChild(
-        makeElement("div", "donor-name", donor.name)
-      );
-
-      nameBox.appendChild(
-        makeElement(
-          "div",
-          "donor-number",
-          "Donor #" + (donors.length - index)
-        )
-      );
-
-      const status = makeElement(
-        "span",
-        "status " + (due <= 0 ? "status-paid" : "status-pending"),
-        due <= 0 ? "সম্পূর্ণ জমা" : "বাকি আছে"
-      );
-
-      head.append(nameBox, status);
-      card.appendChild(head);
-
-      const data = makeElement("div", "donor-data");
-
-      [
-        ["প্রতিশ্রুত", money(pledged)],
-        ["জমা", money(paid)],
-        ["বাকি", money(due)]
-      ].forEach(([label, value]) => {
-        const box = makeElement("div", "data-box");
-        box.appendChild(makeElement("span", "", label));
-        box.appendChild(makeElement("strong", "", value));
-        data.appendChild(box);
-      });
-
-      card.appendChild(data);
-
-      if (isAdmin && donor.phone) {
-        card.appendChild(
-          makeElement("div", "phone-line", "📞 " + donor.phone)
-        );
-      }
-
-      // ADMIN ACTIONS
-      if (isAdmin) {
-        const actions = makeElement("div", "donor-actions");
-
-        const paymentBtn = makeElement(
-          "button",
-          "btn btn-primary btn-small",
-          "＋ টাকা জমা"
-        );
-
-        paymentBtn.type = "button";
-        paymentBtn.addEventListener("click", () => {
-          paymentForm.classList.toggle("show");
-        });
-
-        const historyBtn = makeElement(
-          "button",
-          "btn btn-light btn-small",
-          "Payment History"
-        );
-
-        historyBtn.type = "button";
-        historyBtn.addEventListener("click", () => {
-          history.classList.toggle("show");
-        });
-
-        const deleteBtn = makeElement(
-          "button",
-          "btn btn-danger btn-small",
-          "Delete Donor"
-        );
-
-        deleteBtn.type = "button";
-        deleteBtn.addEventListener("click", () => {
-          deleteDonor(donor.id, donor.name);
-        });
-
-        actions.append(paymentBtn, historyBtn, deleteBtn);
-        card.appendChild(actions);
-
-        // PAYMENT FORM
-        const paymentForm = makeElement("div", "payment-entry");
-
-        const amountField = makeElement("div", "field");
-        amountField.appendChild(
-          makeElement("label", "", "জমার পরিমাণ (₹)")
-        );
-
-        const amountInput = makeElement("input");
-        amountInput.type = "number";
-        amountInput.min = "0.01";
-        amountInput.step = "0.01";
-        amountInput.placeholder = "টাকার পরিমাণ";
-        amountInput.inputMode = "decimal";
-        amountField.appendChild(amountInput);
-
-        const dateField = makeElement("div", "field");
-        dateField.appendChild(
-          makeElement("label", "", "জমার তারিখ")
-        );
-
-        const dateInput = makeElement("input");
-        dateInput.type = "date";
-        dateInput.value = todayDate();
-        dateField.appendChild(dateInput);
-
-        const savePayment = makeElement(
-          "button",
-          "btn btn-primary btn-full",
-          "Payment Save করুন"
-        );
-
-        savePayment.type = "button";
-        savePayment.addEventListener("click", async () => {
-          const amount = Number(amountInput.value);
-          const date = dateInput.value;
-
-          if (!amount || amount <= 0) {
-            alert("সঠিক টাকার পরিমাণ লিখুন।");
-            return;
-          }
-
-          if (amount > due + 0.001) {
-            alert("বাকি টাকার চেয়ে বেশি জমা দেওয়া যাবে না।");
-            return;
-          }
-
-          if (!date) {
-            alert("জমার তারিখ নির্বাচন করুন।");
-            return;
-          }
-
-          savePayment.disabled = true;
-          savePayment.textContent = "Saving...";
-
-          const { error } = await db
-            .from("payments")
-            .insert({
-              donor_id: donor.id,
-              amount: amount,
-              paid_on: date
-            });
-
-          savePayment.disabled = false;
-          savePayment.textContent = "Payment Save করুন";
-
-          if (error) {
-            alert("Payment Save হয়নি: " + error.message);
-            return;
-          }
-
-          alert("Payment সফলভাবে জমা হয়েছে।");
-          await loadData();
-        });
-
-        paymentForm.append(
-          amountField,
-          dateField,
-          savePayment
-        );
-
-        card.appendChild(paymentForm);
-
-        // PAYMENT HISTORY FOR THIS DONOR
-        const history = makeElement("div", "history");
-        history.appendChild(
-          makeElement("div", "history-title", "এই Donor-এর জমার বিবরণ")
-        );
-
-        const donorPayments = payments
-          .filter(p => p.donor_id === donor.id)
-          .sort((a, b) =>
-            String(b.paid_on).localeCompare(String(a.paid_on))
-          );
-
-        if (!donorPayments.length) {
-          history.appendChild(
-            makeElement("div", "empty", "এখনও কোনও Payment জমা হয়নি।")
-          );
-        } else {
-          donorPayments.forEach(payment => {
-            const row = makeElement("div", "history-row");
-            const info = makeElement(
-              "span",
-              "",
-              payment.paid_on || ""
-            );
-
-            const right = makeElement("div");
-            right.style.display = "flex";
-            right.style.alignItems = "center";
-            right.style.gap = "8px";
-
-            right.appendChild(
-              makeElement("strong", "", money(payment.amount))
-            );
-
-            const deletePaymentBtn = makeElement(
-              "button",
-              "btn btn-danger btn-small",
-              "Delete"
-            );
-
-            deletePaymentBtn.type = "button";
-            deletePaymentBtn.addEventListener("click", () => {
-              deletePayment(payment.id);
-            });
-
-            right.appendChild(deletePaymentBtn);
-            row.append(info, right);
-            history.appendChild(row);
-          });
+        if (!amount || amount <= 0) {
+          alert("সঠিক টাকার পরিমাণ লিখুন।");
+          return;
         }
 
-        card.appendChild(history);
-      }
+        if (amount > due + 0.001) {
+          alert("বাকি টাকার চেয়ে বেশি জমা দেওয়া যাবে না।");
+          return;
+        }
 
-      container.appendChild(card);
-    });
-  }
+        if (!date) {
+          alert("জমার তারিখ নির্বাচন করুন।");
+          return;
+        }
 
-  // ==========================================
-  // PUBLIC PAYMENT HISTORY
-  // ==========================================
+        savePayment.disabled = true;
+        savePayment.textContent = "Saving...";
 
-  function renderPaymentHistory() {
-    const container = $("paymentHistory");
-    container.replaceChildren();
+        const { error } = await db.from("payments").insert({
+          donor_id: donor.id,
+          amount: amount,
+          paid_on: date
+        });
 
-    const sorted = [...payments]
-      .sort((a, b) =>
-        String(b.paid_on).localeCompare(String(a.paid_on))
-      )
-      .slice(0, 20);
+        savePayment.disabled = false;
+        savePayment.textContent = "Payment Save করুন";
 
-    if (!sorted.length) {
-      container.appendChild(
-        makeElement("div", "empty", "এখনও কোনও টাকা জমা হয়নি।")
-      );
-      return;
-    }
+        if (error) {
+          alert("Payment Save হয়নি: " + error.message);
+          return;
+        }
 
-    sorted.forEach(payment => {
-      const donor = donors.find(
-        d => d.id === payment.donor_id
-      );
-
-      const row = makeElement("div", "payment-summary");
-
-      const left = makeElement("div");
-      left.appendChild(
-        makeElement("strong", "", donor ? donor.name : "Donor")
-      );
-      left.appendChild(
-        makeElement("div", "", payment.paid_on || "")
-      );
-
-      row.append(
-        left,
-        makeElement("strong", "", money(payment.amount))
-      );
-
-      container.appendChild(row);
-    });
-  }
-
-  function renderAll() {
-    renderSummary();
-    renderDonors();
-    renderPaymentHistory();
-  }
-
-  // ==========================================
-  // ADMIN LOGIN
-  // ==========================================
-
-  $("loginForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const email = $("adminEmail").value.trim();
-    const password = $("adminPassword").value;
-
-    showMessage("loginMessage", "Login হচ্ছে...", "success");
-
-    const { data, error } = await db.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      showMessage(
-        "loginMessage",
-        "Login হয়নি: " + error.message,
-        "error"
-      );
-      return;
-    }
-
-    if (data.user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-      await db.auth.signOut();
-
-      showMessage(
-        "loginMessage",
-        "এই Email Admin হিসেবে অনুমোদিত নয়।",
-        "error"
-      );
-      return;
-    }
-
-    $("adminPassword").value = "";
-    await updateAdminUI(data.session);
-    showMessage("loginMessage", "Admin Login সফল হয়েছে।", "success");
-  });
-
-  async function updateAdminUI(session) {
-    isAdmin = Boolean(
-      session &&
-      session.user &&
-      session.user.email &&
-      session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
-    );
-
-    $("loginSection").classList.toggle("hidden", isAdmin);
-    $("adminSection").classList.toggle("hidden", !isAdmin);
-
-    await loadData();
-  }
-
-  $("logoutBtn").addEventListener("click", async () => {
-    const { error } = await db.auth.signOut();
-
-    if (error) {
-      alert("Logout হয়নি: " + error.message);
-      return;
-    }
-
-    isAdmin = false;
-    await updateAdminUI(null);
-  });
-
-  // ==========================================
-  // ADD DONOR
-  // ==========================================
-
-  $("donorForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    if (!isAdmin) {
-      alert("Admin Login প্রয়োজন।");
-      return;
-    }
-
-    const name = $("donorName").value.trim();
-    const phone = $("donorPhone").value.trim();
-    const amount = Number($("donorAmount").value);
-
-    if (!name || amount < 0 || !Number.isFinite(amount)) {
-      showMessage(
-        "donorMessage",
-        "সঠিক তথ্য লিখুন।",
-        "error"
-      );
-      return;
-    }
-
-    const button = event.submitter;
-    button.disabled = true;
-    button.textContent = "Saving...";
-
-    const { error } = await db
-      .from("donors")
-      .insert({
-        name,
-        phone: phone || null,
-        pledged_amount: amount
+        alert("Payment সফলভাবে জমা হয়েছে।");
+        await loadData();
       });
 
-    button.disabled = false;
-    button.textContent = "Donor যোগ করুন";
+      paymentForm.append(amountField, dateField, savePayment);
+      card.appendChild(paymentForm);
 
-    if (error) {
-      showMessage(
-        "donorMessage",
-        "Donor যোগ হয়নি: " + error.message,
-        "error"
-      );
-      return;
+      const history = makeElement("div", "history");
+      history.appendChild(makeElement("div", "history-title", "এই Donor-এর জমার বিবরণ"));
+
+      const donorPayments = payments
+        .filter(p => p.donor_id === donor.id)
+        .sort((a, b) => String(b.paid_on).localeCompare(String(a.paid_on)));
+
+      if (!donorPayments.length) {
+        history.appendChild(makeElement("div", "empty", "এখনও কোনও Payment জমা হয়নি।"));
+      } else {
+        donorPayments.forEach(payment => {
+          const row = makeElement("div", "history-row");
+          const info = makeElement("span", "", payment.paid_on || "");
+          const right = makeElement("div");
+
+          right.style.display = "flex";
+          right.style.alignItems = "center";
+          right.style.gap = "8px";
+
+          right.appendChild(makeElement("strong", "", money(payment.amount)));
+
+          const deletePaymentBtn = makeElement("button", "btn btn-danger btn-small", "Delete");
+          deletePaymentBtn.type = "button";
+          deletePaymentBtn.addEventListener("click", () => deletePayment(payment.id));
+
+          right.appendChild(deletePaymentBtn);
+          row.append(info, right);
+          history.appendChild(row);
+        });
+      }
+
+      card.appendChild(history);
+
+      paymentBtn.addEventListener("click", () => {
+        paymentForm.classList.toggle("show");
+      });
+
+      historyBtn.addEventListener("click", () => {
+        history.classList.toggle("show");
+      });
+
+      deleteBtn.addEventListener("click", () => {
+        deleteDonor(donor.id, donor.name);
+      });
     }
 
-    $("donorForm").reset();
-
-    showMessage(
-      "donorMessage",
-      "নতুন Donor সফলভাবে যোগ হয়েছে।",
-      "success"
-    );
-
-    await loadData();
+    container.appendChild(card);
   });
+}
 
-  // ==========================================
-  // DELETE DONOR
-  // ==========================================
+// PUBLIC PAYMENT HISTORY
+function renderPaymentHistory() {
+  const container = $("paymentHistory");
+  container.replaceChildren();
 
-  async function deleteDonor(id, name) {
-    if (!isAdmin) return;
+  const sorted = [...payments]
+    .sort((a, b) => String(b.paid_on).localeCompare(String(a.paid_on)))
+    .slice(0, 20);
 
-    const confirmDelete = confirm(
-      name + " এবং তাঁর সব Payment History মুছে ফেলবেন?"
-    );
-
-    if (!confirmDelete) return;
-
-    const { error } = await db
-      .from("donors")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("Donor Delete হয়নি: " + error.message);
-      return;
-    }
-
-    alert("Donor এবং তাঁর Payment History মুছে দেওয়া হয়েছে।");
-    await loadData();
+  if (!sorted.length) {
+    container.appendChild(makeElement("div", "empty", "এখনও কোনও টাকা জমা হয়নি।"));
+    return;
   }
 
-  // ==========================================
-  // DELETE PAYMENT
-  // ==========================================
+  sorted.forEach(payment => {
+    const donor = donors.find(d => d.id === payment.donor_id);
+    const row = makeElement("div", "payment-summary");
+    const left = makeElement("div");
 
-  async function deletePayment(id) {
-    if (!isAdmin) return;
+    left.appendChild(makeElement("strong", "", donor ? donor.name : "Donor"));
+    left.appendChild(makeElement("div", "", payment.paid_on || ""));
 
-    if (!confirm("এই Payment Entry মুছে ফেলবেন?")) {
-      return;
-    }
+    row.append(left, makeElement("strong", "", money(payment.amount)));
+    container.appendChild(row);
+  });
+}
 
-    const { error } = await db
-      .from("payments")
-      .delete()
-      .eq("id", id);
+function renderAll() {
+  renderSummary();
+  renderDonors();
+  renderPaymentHistory();
+}
 
-    if (error) {
-      alert("Payment Delete হয়নি: " + error.message);
-      return;
-    }
+// LOGIN
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
-    alert("Payment Entry মুছে দেওয়া হয়েছে।");
-    await loadData();
+  const email = $("adminEmail").value.trim();
+  const password = $("adminPassword").value;
+
+  showMessage("loginMessage", "Login হচ্ছে...", "success");
+
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    showMessage("loginMessage", "Login হয়নি: " + error.message, "error");
+    return;
   }
 
-  // ==========================================
-  // SEARCH AND REFRESH
-  // ==========================================
-
-  $("searchInput").addEventListener("input", renderDonors);
-
-  $("refreshBtn").addEventListener("click", async () => {
-    await loadData();
-  });
-
-  // ==========================================
-  // CSV DOWNLOAD
-  // ==========================================
-
-  $("csvBtn").addEventListener("click", () => {
-    if (!isAdmin) return;
-
-    const rows = [
-      ["Name", "Phone", "Pledged", "Collected", "Pending"]
-    ];
-
-    donors.forEach(donor => {
-      rows.push([
-        donor.name,
-        donor.phone || "",
-        Number(donor.pledged_amount || 0),
-        getPaid(donor.id),
-        getDue(donor)
-      ]);
-    });
-
-    const csv = rows.map(row =>
-      row.map(value =>
-        '"' + String(value).replace(/"/g, '""') + '"'
-      ).join(",")
-    ).join("\r\n");
-
-    const blob = new Blob(
-      ["\uFEFF" + csv],
-      { type: "text/csv;charset=utf-8;" }
-    );
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "GFC-Chanda-Collection-2026.csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(url);
-  });
-
-  // ==========================================
-  // REALTIME
-  // ==========================================
-
-  function startRealtime() {
-    if (realtimeChannel) {
-      db.removeChannel(realtimeChannel);
-    }
-
-    realtimeChannel = db
-      .channel("gfc-collection-live")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "payments"
-        },
-        () => loadData()
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "donors"
-        },
-        () => loadData()
-      )
-      .subscribe();
+  if (data.user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    await db.auth.signOut();
+    showMessage("loginMessage", "এই Email Admin হিসেবে অনুমোদিত নয়।", "error");
+    return;
   }
 
-  // Public donor view is not a Realtime table.
-  // তাই Public page-এ নতুন Donor দেখাতে 15 সেকেন্ড অন্তর refresh হবে।
-  // Admin-এর ক্ষেত্রে donors এবং payments Realtime event-ও কাজ করবে।
+  $("adminPassword").value = "";
+  await updateAdminUI(data.session);
+  showMessage("loginMessage", "Admin Login সফল হয়েছে।", "success");
+});
 
-  setInterval(() => {
-    if (document.visibilityState === "visible") {
-      loadData();
-    }
-  }, 15000);
+async function updateAdminUI(session) {
+  isAdmin = Boolean(
+    session &&
+    session.user &&
+    session.user.email &&
+    session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+  );
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      loadData();
-    }
-  });
+  $("loginSection").classList.toggle("hidden", isAdmin);
+  $("adminSection").classList.toggle("hidden", !isAdmin);
 
-  // ==========================================
-  // INITIALIZE
-  // ==========================================
+  await loadData();
+}
 
-  async function initializeApp() {
-    const { data, error } = await db.auth.getSession();
+$("logoutBtn").addEventListener("click", async () => {
+  const { error } = await db.auth.signOut();
 
-    if (error) {
-      console.error(error);
-    }
-
-    await updateAdminUI(data?.session || null);
-    startRealtime();
+  if (error) {
+    alert("Logout হয়নি: " + error.message);
+    return;
   }
 
-  db.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT" ||
-        event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-      await updateAdminUI(session);
-    }
+  isAdmin = false;
+  await updateAdminUI(null);
+});
+
+// ADD DONOR
+$("donorForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!isAdmin) {
+    alert("Admin Login প্রয়োজন।");
+    return;
+  }
+
+  const name = $("donorName").value.trim();
+  const phone = $("donorPhone").value.trim();
+  const amount = Number($("donorAmount").value);
+
+  if (!name || !Number.isFinite(amount) || amount < 0) {
+    showMessage("donorMessage", "সঠিক তথ্য লিখুন।", "error");
+    return;
+  }
+
+  const button = event.submitter;
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  const { error } = await db.from("donors").insert({
+    name,
+    phone: phone || null,
+    pledged_amount: amount
   });
 
-  initializeApp();
+  button.disabled = false;
+  button.textContent = "Donor যোগ করুন";
+
+  if (error) {
+    showMessage("donorMessage", "Donor যোগ হয়নি: " + error.message, "error");
+    return;
+  }
+
+  $("donorForm").reset();
+  showMessage("donorMessage", "নতুন Donor সফলভাবে যোগ হয়েছে।", "success");
+  await loadData();
+});
+
+// DELETE DONOR
+async function deleteDonor(id, name) {
+  if (!isAdmin) return;
+
+  if (!confirm(name + " এবং তাঁর সব Payment History মুছে ফেলবেন?")) return;
+
+  const { error } = await db.from("donors").delete().eq("id", id);
+
+  if (error) {
+    alert("Donor Delete হয়নি: " + error.message);
+    return;
+  }
+
+  alert("Donor এবং তাঁর Payment History মুছে দেওয়া হয়েছে।");
+  await loadData();
+}
+
+// DELETE PAYMENT
+async function deletePayment(id) {
+  if (!isAdmin) return;
+  if (!confirm("এই Payment Entry মুছে ফেলবেন?")) return;
+
+  const { error } = await db.from("payments").delete().eq("id", id);
+
+  if (error) {
+    alert("Payment Delete হয়নি: " + error.message);
+    return;
+  }
+
+  alert("Payment Entry মুছে দেওয়া হয়েছে।");
+  await loadData();
+}
+
+// SEARCH AND REFRESH
+$("searchInput").addEventListener("input", renderDonors);
+$("refreshBtn").addEventListener("click", loadData);
+
+// CSV DOWNLOAD
+$("csvBtn").addEventListener("click", () => {
+  if (!isAdmin) return;
+
+  const rows = [["Name", "Phone", "Pledged", "Collected", "Pending"]];
+
+  donors.forEach(donor => {
+    rows.push([
+      donor.name,
+      donor.phone || "",
+      Number(donor.pledged_amount || 0),
+      getPaid(donor.id),
+      getDue(donor)
+    ]);
+  });
+
+  const csv = rows.map(row =>
+    row.map(value => '"' + String(value).replace(/"/g, '""') + '"').join(",")
+  ).join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "GFC-Chanda-Collection-2026.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+});
+
+// REALTIME
+function startRealtime() {
+  if (realtimeChannel) {
+    db.removeChannel(realtimeChannel);
+  }
+
+  realtimeChannel = db.channel("gfc-collection-live")
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "payments"
+    }, () => loadData())
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "donors"
+    }, () => loadData())
+    .subscribe();
+}
+
+// Public donor list view-এর জন্য automatic refresh
+setInterval(() => {
+  if (document.visibilityState === "visible") loadData();
+}, 15000);
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") loadData();
+});
+
+// INITIALIZE
+async function initializeApp() {
+  const { data, error } = await db.auth.getSession();
+
+  if (error) console.error(error);
+
+  await updateAdminUI(data?.session || null);
+  startRealtime();
+}
+
+db.auth.onAuthStateChange((event, session) => {
+  if (
+    event === "SIGNED_IN" ||
+    event === "SIGNED_OUT" ||
+    event === "TOKEN_REFRESHED" ||
+    event === "USER_UPDATED"
+  ) {
+    updateAdminUI(session);
+  }
+});
+
+initializeApp();
 </script>
-
 </body>
 </html>
