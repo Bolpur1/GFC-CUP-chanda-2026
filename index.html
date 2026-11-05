@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GFC CHANDA COLLECTION 2026</title>
+<meta name="description" content="GFC Chanda Collection 2026 - চাঁদা সংগ্রহ ও বকেয়া হিসাব">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -24,6 +25,7 @@ header h1{font-size:25px;margin-bottom:8px}
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
 button{padding:10px 14px;border:0;border-radius:7px;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.5;cursor:not-allowed}
 .add-btn{background:#087c70;color:white;width:100%;margin-top:13px;padding:13px}
 .search{margin-bottom:13px}
 .table-box{overflow-x:auto}
@@ -43,15 +45,27 @@ th{background:#f8fafc;color:#475569}
 .tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
 .download-btn{background:#087c70;color:white}
 .print-btn{background:#334155;color:white}
+.admin-box{margin-bottom:20px}
+.admin-status{font-size:14px;margin:10px 0;color:#64748b}
+.admin-controls{display:none}
+.admin-controls.visible{display:block}
+.login-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.primary-btn{background:#087c70;color:white}
+.logout-btn{background:#fee2e2;color:#dc2626}
+.message{padding:11px;border-radius:8px;margin-top:10px;font-size:14px;display:none}
+.message.error{display:block;background:#fee2e2;color:#991b1b}
+.message.success{display:block;background:#dcfce7;color:#166534}
+.notice{font-size:13px;color:#64748b;margin-top:9px}
 footer{text-align:center;padding:25px;color:#64748b}
+#loading{text-align:center;padding:20px;color:#64748b}
 @media(max-width:700px){
 .stats{grid-template-columns:repeat(2,1fr)}
-.form-grid{grid-template-columns:1fr}
+.form-grid,.login-grid{grid-template-columns:1fr}
 header h1{font-size:20px}
 .card h2{font-size:20px}
 }
 @media print{
-.form-box,.tools,.action,header p{display:none!important}
+.admin-box,.form-box,.tools,.action,header p,.search{display:none!important}
 body{background:white}
 .container{max-width:100%;margin:10px}
 }
@@ -67,6 +81,27 @@ body{background:white}
 
 <div class="container">
 
+<!-- ADMIN LOGIN -->
+<div class="card admin-box">
+<h2 class="section-title">🔐 Admin Control Panel</h2>
+<p id="adminStatus" class="admin-status">Admin Login করা নেই। Public হিসাব দেখা যাচ্ছে।</p>
+
+<div id="loginArea">
+<div class="login-grid">
+<input id="adminEmail" type="email" placeholder="Admin Email" autocomplete="username">
+<input id="adminPassword" type="password" placeholder="Admin Password" autocomplete="current-password">
+</div>
+<button class="primary-btn" id="loginBtn" style="margin-top:12px">Admin Login</button>
+<p class="notice">শুধুমাত্র অনুমোদিত Admin Account ব্যবহার করতে পারবেন।</p>
+</div>
+
+<div id="logoutArea" style="display:none">
+<button class="logout-btn" id="logoutBtn">Logout</button>
+</div>
+<div id="message" class="message"></div>
+</div>
+
+<!-- STATISTICS -->
 <div class="stats">
 <div class="card">
 <h3>মোট নির্ধারিত চাঁদা</h3>
@@ -94,19 +129,20 @@ body{background:white}
 <p id="progressText">0% সম্পন্ন</p>
 </div>
 
-<div class="form-box">
+<!-- ADMIN ONLY: ADD DONOR -->
+<div class="form-box admin-controls" id="addDonorArea">
 <h2 class="section-title">➕ নতুন ব্যক্তির নাম যোগ করুন</h2>
-
 <form id="personForm">
 <div class="form-grid">
 <input id="personName" placeholder="ব্যক্তির নাম" required>
 <input id="personPhone" placeholder="মোবাইল নম্বর (ঐচ্ছিক)">
-<input id="personDue" type="number" min="1" placeholder="মোট নির্ধারিত চাঁদা (₹)" required>
+<input id="personDue" type="number" min="1" step="0.01" placeholder="মোট নির্ধারিত চাঁদা (₹)" required>
 </div>
 <button class="add-btn" type="submit">+ ব্যক্তি যোগ করুন</button>
 </form>
 </div>
 
+<!-- DONOR LIST -->
 <div class="table-box">
 <h2 class="section-title">📋 চাঁদা প্রদানকারীর তালিকা</h2>
 
@@ -117,6 +153,8 @@ body{background:white}
 <option value="pending">শুধুমাত্র Pending</option>
 <option value="paid">শুধুমাত্র Paid</option>
 </select>
+
+<div id="loading">তথ্য লোড হচ্ছে...</div>
 
 <table>
 <thead>
@@ -135,339 +173,583 @@ body{background:white}
 </table>
 
 <div class="tools">
-<button class="download-btn" onclick="downloadCSV()">⬇ Download CSV</button>
+<button class="download-btn" id="csvBtn">⬇ Download CSV</button>
 <button class="print-btn" onclick="window.print()">🖨 Print</button>
 </div>
 </div>
 
 </div>
 
-<footer>
-© 2026 GFC CHANDA COLLECTION
-</footer>
+<footer>© 2026 GFC CHANDA COLLECTION</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+"use strict";
 
-const TARGET=50000;
-const STORAGE_KEY="gfc_chanda_installments_2026";
+/* SUPABASE CONFIGURATION */
+const SUPABASE_URL = "https://ueqhecvvniywwmtrydcp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_mPujg0FYaGLe3kqUryJerQ_kSzPUAHd";
+const ADMIN_EMAIL = "officework.bolpur@gmail.com";
+const TARGET = 50000;
 
-let people=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const money=n=>"₹"+Number(n).toLocaleString("en-IN");
+let people = [];
+let payments = [];
+let isAdmin = false;
+let currentSession = null;
+let channel = null;
+let loadingData = false;
 
-function totalPaid(person){
-return person.payments.reduce((sum,p)=>sum+Number(p.amount),0);
-}
-
-function pending(person){
-return Math.max(0,Number(person.due)-totalPaid(person));
-}
-
-function save(){
-localStorage.setItem(STORAGE_KEY,JSON.stringify(people));
-render();
-}
-
-// নতুন ব্যক্তি যোগ
-
-document.getElementById("personForm").addEventListener("submit",function(e){
-e.preventDefault();
-
-const name=document.getElementById("personName").value.trim();
-const phone=document.getElementById("personPhone").value.trim();
-const due=Number(document.getElementById("personDue").value);
-
-if(!name||due<=0){
-alert("সঠিক তথ্য দিন");
-return;
-}
-
-people.push({
-id:Date.now(),
-name,
-phone,
-due,
-payments:[]
+const money = n => "₹" + Number(n || 0).toLocaleString("en-IN", {
+  maximumFractionDigits: 2
 });
 
-save();
-this.reset();
-alert("নতুন ব্যক্তি সফলভাবে যোগ হয়েছে!");
+function showMessage(message, type="success") {
+  const box = document.getElementById("message");
+  box.textContent = message;
+  box.className = "message " + type;
+  setTimeout(() => {
+    box.className = "message";
+  }, 5000);
+}
+
+function totalPaid(person) {
+  return payments
+    .filter(p => p.donor_id === person.id)
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+}
+
+function pending(person) {
+  return Math.max(0, Number(person.pledged_amount || 0) - totalPaid(person));
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+/* ADMIN UI */
+function updateAdminUI() {
+  document.getElementById("loginArea").style.display = isAdmin ? "none" : "block";
+  document.getElementById("logoutArea").style.display = isAdmin ? "block" : "none";
+
+  document.getElementById("adminStatus").textContent = isAdmin
+    ? "Admin Login সফল: " + ADMIN_EMAIL
+    : "Admin Login করা নেই। Public হিসাব দেখা যাচ্ছে।";
+
+  document.querySelectorAll(".admin-controls").forEach(el => {
+    el.classList.toggle("visible", isAdmin);
+  });
+}
+
+/* LOAD LIVE DATABASE */
+async function loadData() {
+  if (loadingData) return;
+  loadingData = true;
+
+  document.getElementById("loading").style.display = "block";
+
+  try {
+    let donorQuery;
+
+    if (isAdmin) {
+      donorQuery = db.from("donors")
+        .select("id,name,phone,pledged_amount,created_at")
+        .order("created_at", {ascending:true});
+    } else {
+      donorQuery = db.from("public_donors")
+        .select("id,name,pledged_amount,created_at")
+        .order("created_at", {ascending:true});
+    }
+
+    const [donorResult, paymentResult] = await Promise.all([
+      donorQuery,
+      db.from("payments")
+        .select("id,donor_id,amount,paid_on,created_at")
+        .order("paid_on", {ascending:false})
+    ]);
+
+    if (donorResult.error) throw donorResult.error;
+    if (paymentResult.error) throw paymentResult.error;
+
+    people = donorResult.data || [];
+    payments = paymentResult.data || [];
+
+    render();
+
+  } catch (error) {
+    console.error(error);
+    showMessage("তথ্য লোড করা যায়নি: " + error.message, "error");
+  } finally {
+    loadingData = false;
+    document.getElementById("loading").style.display = "none";
+  }
+}
+
+/* ADMIN LOGIN */
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("adminEmail").value.trim().toLowerCase();
+  const password = document.getElementById("adminPassword").value;
+
+  if (email !== ADMIN_EMAIL) {
+    showMessage("এই Email দিয়ে Admin Login অনুমোদিত নয়।", "error");
+    return;
+  }
+
+  if (!password) {
+    showMessage("Admin Password লিখুন।", "error");
+    return;
+  }
+
+  const button = document.getElementById("loginBtn");
+  button.disabled = true;
+  button.textContent = "Login হচ্ছে...";
+
+  try {
+    const {data, error} = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    if (data.user.email.toLowerCase() !== ADMIN_EMAIL) {
+      await db.auth.signOut();
+      throw new Error("এই Account Admin নয়।");
+    }
+
+    currentSession = data.session;
+    isAdmin = true;
+    document.getElementById("adminPassword").value = "";
+    updateAdminUI();
+    await loadData();
+    showMessage("Admin Login সফল হয়েছে!");
+
+  } catch (error) {
+    showMessage("Login ব্যর্থ: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Admin Login";
+  }
 });
 
-// টাকা জমা
+/* ADMIN LOGOUT */
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  const {error} = await db.auth.signOut();
 
-function addPayment(id){
+  if (error) {
+    showMessage(error.message, "error");
+    return;
+  }
 
-const person=people.find(p=>p.id===id);
-if(!person)return;
-
-const remaining=pending(person);
-
-if(remaining<=0){
-alert("এই ব্যক্তির সম্পূর্ণ চাঁদা জমা হয়েছে!");
-return;
-}
-
-const amount=prompt(
-person.name+" এর Pending চাঁদা: "+money(remaining)+
-"\nকত টাকা জমা নেবেন?"
-);
-
-if(amount===null)return;
-
-const value=Number(amount);
-
-if(!Number.isFinite(value)||value<=0){
-alert("সঠিক টাকার পরিমাণ লিখুন");
-return;
-}
-
-if(value>remaining){
-alert("Pending টাকার বেশি জমা নেওয়া যাবে না!");
-return;
-}
-
-person.payments.push({
-id:Date.now(),
-amount:value,
-date:new Date().toISOString().split("T")[0]
+  isAdmin = false;
+  currentSession = null;
+  updateAdminUI();
+  await loadData();
+  showMessage("Admin Logout সফল হয়েছে।");
 });
 
-save();
-alert("টাকা জমা সফল হয়েছে!");
+/* SESSION CHECK */
+async function checkSession() {
+  const {data, error} = await db.auth.getSession();
+
+  if (error) {
+    showMessage(error.message, "error");
+    return;
+  }
+
+  const user = data.session?.user;
+
+  if (user && user.email.toLowerCase() === ADMIN_EMAIL) {
+    currentSession = data.session;
+    isAdmin = true;
+  } else {
+    if (user) await db.auth.signOut();
+    isAdmin = false;
+    currentSession = null;
+  }
+
+  updateAdminUI();
 }
 
-// Payment History
+/* ADD DONOR */
+document.getElementById("personForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
 
-function toggleHistory(id){
-const row=document.getElementById("history-"+id);
-if(row)row.hidden=!row.hidden;
-}
+  if (!isAdmin) {
+    showMessage("নতুন ব্যক্তি যোগ করতে Admin Login করুন।", "error");
+    return;
+  }
 
-function deletePayment(personId,paymentId){
+  const name = document.getElementById("personName").value.trim();
+  const phone = document.getElementById("personPhone").value.trim();
+  const due = Number(document.getElementById("personDue").value);
 
-if(!confirm("এই Payment Entry মুছে ফেলবেন?"))return;
+  if (!name || !Number.isFinite(due) || due <= 0) {
+    showMessage("সঠিক তথ্য দিন।", "error");
+    return;
+  }
 
-const person=people.find(p=>p.id===personId);
-if(!person)return;
+  const {error} = await db.from("donors").insert({
+    name,
+    phone: phone || null,
+    pledged_amount: due
+  });
 
-person.payments=person.payments.filter(p=>p.id!==paymentId);
-save();
-}
+  if (error) {
+    showMessage("ব্যক্তি যোগ করা যায়নি: " + error.message, "error");
+    return;
+  }
 
-function deletePerson(id){
-
-if(!confirm("এই ব্যক্তির সমস্ত তথ্য ও Payment History মুছে ফেলবেন?"))return;
-
-people=people.filter(p=>p.id!==id);
-save();
-}
-
-// মোট হিসাব ও তালিকা
-
-function render(){
-
-let dueTotal=0;
-let paidTotal=0;
-
-people.forEach(p=>{
-dueTotal+=Number(p.due);
-paidTotal+=totalPaid(p);
+  this.reset();
+  await loadData();
+  showMessage("নতুন ব্যক্তি সফলভাবে যোগ হয়েছে!");
 });
 
-const pendingTotal=Math.max(0,dueTotal-paidTotal);
+/* ADD PAYMENT */
+async function addPayment(id) {
+  if (!isAdmin) return;
 
-document.getElementById("totalDue").textContent=money(dueTotal);
-document.getElementById("totalPaid").textContent=money(paidTotal);
-document.getElementById("totalPending").textContent=money(pendingTotal);
-document.getElementById("totalPeople").textContent=people.length+" জন";
+  const person = people.find(p => p.id === id);
+  if (!person) return;
 
-const percentage=dueTotal?Math.min(100,paidTotal/dueTotal*100):0;
+  const remaining = pending(person);
 
-document.getElementById("progressBar").style.width=percentage+"%";
-document.getElementById("progressText").textContent=percentage.toFixed(1)+"% সংগৃহীত";
+  if (remaining <= 0) {
+    alert("এই ব্যক্তির সম্পূর্ণ চাঁদা জমা হয়েছে!");
+    return;
+  }
 
-const query=document.getElementById("searchInput").value.toLowerCase();
-const filter=document.getElementById("filterStatus").value;
+  const amount = prompt(
+    person.name + " এর Pending চাঁদা: " + money(remaining) +
+    "\nকত টাকা জমা নেবেন?"
+  );
 
-const list=document.getElementById("personList");
-list.innerHTML="";
+  if (amount === null) return;
 
-let serial=0;
+  const value = Number(amount);
 
-people.forEach(person=>{
+  if (!Number.isFinite(value) || value <= 0) {
+    alert("সঠিক টাকার পরিমাণ লিখুন।");
+    return;
+  }
 
-const paid=totalPaid(person);
-const left=pending(person);
-const status=left===0?"paid":"pending";
+  if (value > remaining) {
+    alert("Pending টাকার বেশি জমা নেওয়া যাবে না!");
+    return;
+  }
 
-if(!person.name.toLowerCase().includes(query))return;
-if(filter!=="all"&&filter!==status)return;
+  const today = new Date();
+  const paidOn = [
+    today.getFullYear(),
+    String(today.getMonth()+1).padStart(2,"0"),
+    String(today.getDate()).padStart(2,"0")
+  ].join("-");
 
-serial++;
+  const {error} = await db.from("payments").insert({
+    donor_id: id,
+    amount: value,
+    paid_on: paidOn
+  });
 
-const tr=document.createElement("tr");
+  if (error) {
+    showMessage("Payment সংরক্ষণ হয়নি: " + error.message, "error");
+    return;
+  }
 
-function cell(value,className=""){
-const td=document.createElement("td");
-td.textContent=value;
-if(className)td.className=className;
-tr.appendChild(td);
+  await loadData();
+  showMessage("টাকা জমা সফল হয়েছে!");
 }
 
-cell(serial);
-cell(person.name);
-cell(person.phone||"-");
-cell(money(person.due),"amount");
-cell(money(paid),"amount");
-cell(money(left),left>0?"pending":"paid");
-cell(left===0?"PAID":"PENDING",left===0?"paid":"pending");
+/* DELETE PAYMENT */
+async function deletePayment(paymentId) {
+  if (!isAdmin) return;
+  if (!confirm("এই Payment Entry মুছে ফেলবেন?")) return;
 
-const action=document.createElement("td");
-action.className="action";
+  const {error} = await db.from("payments")
+    .delete()
+    .eq("id", paymentId);
 
-const pay=document.createElement("button");
-pay.textContent="+ টাকা জমা";
-pay.className="pay-btn";
-pay.onclick=()=>addPayment(person.id);
+  if (error) {
+    showMessage("Payment মুছতে সমস্যা: " + error.message, "error");
+    return;
+  }
 
-const history=document.createElement("button");
-history.textContent="History";
-history.className="history-btn";
-history.onclick=()=>toggleHistory(person.id);
-
-const del=document.createElement("button");
-del.textContent="Delete";
-del.className="delete-btn";
-del.onclick=()=>deletePerson(person.id);
-
-if(left===0)pay.disabled=true;
-
-action.append(pay,history,del);
-tr.appendChild(action);
-list.appendChild(tr);
-
-// History row
-
-const historyRow=document.createElement("tr");
-historyRow.className="history-row";
-historyRow.id="history-"+person.id;
-historyRow.hidden=true;
-
-const historyCell=document.createElement("td");
-historyCell.colSpan=8;
-
-const heading=document.createElement("h3");
-heading.textContent=person.name+" - Payment History";
-heading.style.marginBottom="12px";
-historyCell.appendChild(heading);
-
-if(person.payments.length===0){
-
-const empty=document.createElement("p");
-empty.textContent="এখনও কোনো টাকা জমা হয়নি।";
-historyCell.appendChild(empty);
-
-}else{
-
-const historyTable=document.createElement("table");
-
-const thead=document.createElement("thead");
-const headRow=document.createElement("tr");
-
-["ক্রমিক","জমার তারিখ","জমা টাকা","Action"].forEach(t=>{
-const th=document.createElement("th");
-th.textContent=t;
-headRow.appendChild(th);
-});
-
-thead.appendChild(headRow);
-historyTable.appendChild(thead);
-
-const tbody=document.createElement("tbody");
-
-person.payments.forEach((payment,index)=>{
-
-const row=document.createElement("tr");
-
-[index+1,payment.date,money(payment.amount)].forEach(v=>{
-const td=document.createElement("td");
-td.textContent=v;
-row.appendChild(td);
-});
-
-const td=document.createElement("td");
-const remove=document.createElement("button");
-remove.textContent="Delete";
-remove.className="delete-btn";
-remove.onclick=()=>deletePayment(person.id,payment.id);
-td.appendChild(remove);
-row.appendChild(td);
-
-tbody.appendChild(row);
-});
-
-historyTable.appendChild(tbody);
-historyCell.appendChild(historyTable);
+  await loadData();
+  showMessage("Payment মুছে ফেলা হয়েছে।");
 }
 
-const summary=document.createElement("p");
-summary.style.marginTop="12px";
-summary.textContent="মোট জমা: "+money(paid)+" | বাকি: "+money(left);
-historyCell.appendChild(summary);
+/* DELETE DONOR */
+async function deletePerson(id) {
+  if (!isAdmin) return;
 
-historyRow.appendChild(historyCell);
-list.appendChild(historyRow);
+  if (!confirm("এই ব্যক্তির সমস্ত তথ্য ও Payment History মুছে ফেলবেন?")) return;
 
-});
+  const {error} = await db.from("donors")
+    .delete()
+    .eq("id", id);
 
+  if (error) {
+    showMessage("ব্যক্তি মুছতে সমস্যা: " + error.message, "error");
+    return;
+  }
+
+  await loadData();
+  showMessage("ব্যক্তি ও তাঁর Payment History মুছে ফেলা হয়েছে।");
 }
 
-document.getElementById("searchInput").addEventListener("input",render);
-document.getElementById("filterStatus").addEventListener("change",render);
-
-// CSV Download
-
-function downloadCSV(){
-
-let csv="\uFEFFনাম,মোবাইল,মোট চাঁদা,মোট জমা,Pending,Status,Payment History\n";
-
-people.forEach(p=>{
-
-const paid=totalPaid(p);
-const left=pending(p);
-
-const history=p.payments.map(x=>
-x.date+" : Rs."+x.amount
-).join(" | ");
-
-const safe=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
-
-csv+=[
-safe(p.name),
-safe(p.phone),
-p.due,
-paid,
-left,
-left===0?"PAID":"PENDING",
-safe(history)
-].join(",")+"\n";
-
-});
-
-const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-
-a.href=url;
-a.download="GFC_CHANDA_COLLECTION_2026.csv";
-a.click();
-
-URL.revokeObjectURL(url);
+/* HISTORY TOGGLE */
+function toggleHistory(id) {
+  const row = document.getElementById("history-" + id);
+  if (row) row.hidden = !row.hidden;
 }
 
-render();
+/* RENDER PAGE */
+function render() {
+  const dueTotal = people.reduce(
+    (sum,p) => sum + Number(p.pledged_amount || 0), 0
+  );
+
+  const paidTotal = people.reduce(
+    (sum,p) => sum + totalPaid(p), 0
+  );
+
+  const pendingTotal = Math.max(0, dueTotal - paidTotal);
+
+  document.getElementById("totalDue").textContent = money(dueTotal);
+  document.getElementById("totalPaid").textContent = money(paidTotal);
+  document.getElementById("totalPending").textContent = money(pendingTotal);
+  document.getElementById("totalPeople").textContent = people.length + " জন";
+
+  const percentage = Math.min(100, paidTotal / TARGET * 100);
+  document.getElementById("progressBar").style.width = percentage + "%";
+  document.getElementById("progressText").textContent =
+    percentage.toFixed(1) + "% সংগৃহীত (" + money(paidTotal) + " / " + money(TARGET) + ")";
+
+  const query = document.getElementById("searchInput").value.toLowerCase().trim();
+  const filter = document.getElementById("filterStatus").value;
+  const list = document.getElementById("personList");
+
+  list.replaceChildren();
+
+  let serial = 0;
+
+  people.forEach(person => {
+    const paid = totalPaid(person);
+    const left = pending(person);
+    const status = left === 0 ? "paid" : "pending";
+
+    if (!person.name.toLowerCase().includes(query)) return;
+    if (filter !== "all" && filter !== status) return;
+
+    serial++;
+
+    const tr = document.createElement("tr");
+
+    function cell(value, className="") {
+      const td = document.createElement("td");
+      td.textContent = value;
+      if (className) td.className = className;
+      tr.appendChild(td);
+    }
+
+    cell(serial);
+    cell(person.name);
+    cell(isAdmin ? (person.phone || "-") : "—");
+    cell(money(person.pledged_amount), "amount");
+    cell(money(paid), "amount");
+    cell(money(left), left > 0 ? "pending" : "paid");
+    cell(left === 0 ? "PAID" : "PENDING", left === 0 ? "paid" : "pending");
+
+    const action = document.createElement("td");
+    action.className = "action";
+
+    const history = document.createElement("button");
+    history.textContent = "History";
+    history.className = "history-btn";
+    history.onclick = () => toggleHistory(person.id);
+    action.appendChild(history);
+
+    if (isAdmin) {
+      const pay = document.createElement("button");
+      pay.textContent = "+ টাকা জমা";
+      pay.className = "pay-btn";
+      pay.disabled = left <= 0;
+      pay.onclick = () => addPayment(person.id);
+
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.className = "delete-btn";
+      del.onclick = () => deletePerson(person.id);
+
+      action.append(pay, del);
+    }
+
+    tr.appendChild(action);
+    list.appendChild(tr);
+
+    /* PAYMENT HISTORY */
+    const historyRow = document.createElement("tr");
+    historyRow.className = "history-row";
+    historyRow.id = "history-" + person.id;
+    historyRow.hidden = true;
+
+    const historyCell = document.createElement("td");
+    historyCell.colSpan = 8;
+
+    const heading = document.createElement("h3");
+    heading.textContent = person.name + " - Payment History";
+    heading.style.marginBottom = "12px";
+    historyCell.appendChild(heading);
+
+    const personPayments = payments.filter(p => p.donor_id === person.id);
+
+    if (personPayments.length === 0) {
+      const empty = document.createElement("p");
+      empty.textContent = "এখনও কোনো টাকা জমা হয়নি।";
+      historyCell.appendChild(empty);
+    } else {
+      const historyTable = document.createElement("table");
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+
+      ["ক্রমিক","জমার তারিখ","জমা টাকা","Action"].forEach(title => {
+        const th = document.createElement("th");
+        th.textContent = title;
+        headRow.appendChild(th);
+      });
+
+      thead.appendChild(headRow);
+      historyTable.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+
+      personPayments.forEach((payment,index) => {
+        const row = document.createElement("tr");
+
+        [index+1,payment.paid_on,money(payment.amount)].forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          row.appendChild(td);
+        });
+
+        const td = document.createElement("td");
+
+        if (isAdmin) {
+          const remove = document.createElement("button");
+          remove.textContent = "Delete";
+          remove.className = "delete-btn";
+          remove.onclick = () => deletePayment(payment.id);
+          td.appendChild(remove);
+        } else {
+          td.textContent = "—";
+        }
+
+        row.appendChild(td);
+        tbody.appendChild(row);
+      });
+
+      historyTable.appendChild(tbody);
+      historyCell.appendChild(historyTable);
+    }
+
+    const summary = document.createElement("p");
+    summary.style.marginTop = "12px";
+    summary.textContent = "মোট জমা: " + money(paid) + " | বাকি: " + money(left);
+    historyCell.appendChild(summary);
+
+    historyRow.appendChild(historyCell);
+    list.appendChild(historyRow);
+  });
+}
+
+/* SEARCH AND FILTER */
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("filterStatus").addEventListener("change", render);
+
+/* CSV DOWNLOAD */
+document.getElementById("csvBtn").addEventListener("click", () => {
+  const safe = value => '"' + String(value ?? "").replace(/"/g,'""') + '"';
+
+  let csv = "\uFEFFনাম,মোবাইল,মোট চাঁদা,মোট জমা,Pending,Status,Payment History\n";
+
+  people.forEach(person => {
+    const paid = totalPaid(person);
+    const left = pending(person);
+
+    const history = payments
+      .filter(p => p.donor_id === person.id)
+      .map(p => p.paid_on + " : Rs." + p.amount)
+      .join(" | ");
+
+    csv += [
+      safe(person.name),
+      safe(isAdmin ? person.phone : ""),
+      person.pledged_amount,
+      paid,
+      left,
+      left === 0 ? "PAID" : "PENDING",
+      safe(history)
+    ].join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "GFC_CHANDA_COLLECTION_2026.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+});
+
+/* REALTIME UPDATE */
+function startRealtime() {
+  if (channel) db.removeChannel(channel);
+
+  channel = db.channel("gfc-chanda-live")
+    .on("postgres_changes",
+      {event:"*",schema:"public",table:"donors"},
+      () => loadData()
+    )
+    .on("postgres_changes",
+      {event:"*",schema:"public",table:"payments"},
+      () => loadData()
+    )
+    .subscribe();
+}
+
+/* AUTH STATE CHANGES */
+db.auth.onAuthStateChange(async (event, session) => {
+  const user = session?.user;
+
+  const newAdmin = !!user &&
+    user.email.toLowerCase() === ADMIN_EMAIL;
+
+  if (newAdmin !== isAdmin) {
+    isAdmin = newAdmin;
+    currentSession = newAdmin ? session : null;
+    updateAdminUI();
+    await loadData();
+  }
+});
+
+/* START */
+async function startApp() {
+  await checkSession();
+  await loadData();
+  startRealtime();
+}
+
+startApp();
 
 </script>
 </body>
