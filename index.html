@@ -104,6 +104,7 @@ button{cursor:pointer;border:0}
 .btn-dark{background:#193e2d;color:white}
 .btn-light{background:#eaf4ed;color:#176b42}
 .btn-danger{background:#fff0ef;color:#bd302b}
+.btn-warning{background:#fff3d9;color:#94620c}
 .btn-small{min-height:36px;padding:8px 10px;font-size:11px;border-radius:9px}
 .btn-full{width:100%}
 .admin-top{
@@ -187,12 +188,6 @@ button{cursor:pointer;border:0}
 .message.success{color:#16713c}
 .toolbar{display:flex;gap:8px;margin-top:10px}
 .toolbar button{flex:1}
-@media(max-width:360px){
-  .content{padding:11px}
-  .stat-value{font-size:18px}
-  .donor-data{gap:5px}
-  .data-box strong{font-size:12px}
-}
 </style>
 </head>
 
@@ -211,7 +206,6 @@ button{cursor:pointer;border:0}
 
 <main class="content">
 
-  <!-- COLLECTION SUMMARY -->
   <section class="stats">
     <div class="stat">
       <div class="stat-label">মোট প্রতিশ্রুত চাঁদা</div>
@@ -231,11 +225,10 @@ button{cursor:pointer;border:0}
     </div>
   </section>
 
-  <!-- TARGET -->
   <section class="section">
     <div class="section-title">🎯 Collection Target</div>
     <div class="progress-info">
-      <span>Target: ₹50,000</span>
+      <span>Target: <strong id="targetLabel">₹50,000</strong></span>
       <strong id="progressPercent">0%</strong>
     </div>
     <div class="progress-track">
@@ -247,7 +240,7 @@ button{cursor:pointer;border:0}
     </div>
   </section>
 
-  <!-- ADMIN PANEL: LOGIN করার পরে দেখা যাবে -->
+  <!-- ADMIN PANEL -->
   <section class="section hidden" id="adminSection">
     <div class="admin-top">
       <strong>✅ Admin Panel Active</strong>
@@ -276,6 +269,19 @@ button{cursor:pointer;border:0}
       <div id="donorMessage" class="message"></div>
     </form>
 
+    <hr style="border:0;border-top:1px solid #e8eee9;margin:15px 0">
+
+    <!-- TARGET EDIT -->
+    <div class="section-title">✏️ Collection Target পরিবর্তন</div>
+    <form id="targetForm">
+      <div class="field">
+        <label>নতুন Target Amount (₹)</label>
+        <input type="number" id="targetInput" min="1" step="0.01" required>
+      </div>
+      <button class="btn btn-primary btn-full" type="submit">Target Update করুন</button>
+      <div id="targetMessage" class="message"></div>
+    </form>
+
     <div class="toolbar">
       <button class="btn btn-light" id="csvBtn">⬇ CSV Download</button>
       <button class="btn btn-light" id="refreshBtn">↻ Refresh</button>
@@ -300,7 +306,7 @@ button{cursor:pointer;border:0}
     </div>
   </section>
 
-  <!-- ADMIN LOGIN: একদম নিচে -->
+  <!-- ADMIN LOGIN AT BOTTOM -->
   <section class="section" id="loginSection">
     <div class="section-title">🔐 Admin Login</div>
     <div class="notice">
@@ -338,13 +344,13 @@ button{cursor:pointer;border:0}
 const SUPABASE_URL = "https://ueqhecvvniywwmtrydcp.supabase.co";
 const SUPABASE_KEY = "sb_publishable_mPujg0FYaGLe3kqUryJerQ_kSzPUAHd";
 const ADMIN_EMAIL = "officework.bolpur@gmail.com";
-const TARGET = 50000;
 
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let isAdmin = false;
 let donors = [];
 let payments = [];
+let TARGET = 50000;
 let loading = false;
 let realtimeChannel = null;
 
@@ -385,36 +391,43 @@ function getDue(donor) {
   return Math.max(0, Number(donor.pledged_amount || 0) - getPaid(donor.id));
 }
 
-// LOAD DATA
+/* LOAD DATA */
 async function loadData() {
   if (loading) return;
   loading = true;
 
   try {
-    let donorQuery;
+    const donorQuery = isAdmin
+      ? db.from("donors")
+          .select("id,name,phone,pledged_amount,created_at")
+          .order("created_at", { ascending: false })
+      : db.from("public_donors")
+          .select("id,name,pledged_amount,created_at")
+          .order("created_at", { ascending: false });
 
-    if (isAdmin) {
-      donorQuery = db.from("donors")
-        .select("id,name,phone,pledged_amount,created_at")
-        .order("created_at", { ascending: false });
-    } else {
-      donorQuery = db.from("public_donors")
-        .select("id,name,pledged_amount,created_at")
-        .order("created_at", { ascending: false });
-    }
-
-    const [donorResult, paymentResult] = await Promise.all([
+    const [donorResult, paymentResult, settingsResult] = await Promise.all([
       donorQuery,
       db.from("payments")
         .select("id,donor_id,amount,paid_on,created_at")
-        .order("paid_on", { ascending: false })
+        .order("paid_on", { ascending: false }),
+      db.from("app_settings")
+        .select("target_amount")
+        .eq("id", true)
+        .maybeSingle()
     ]);
 
     if (donorResult.error) throw donorResult.error;
     if (paymentResult.error) throw paymentResult.error;
+    if (settingsResult.error) throw settingsResult.error;
 
     donors = donorResult.data || [];
     payments = paymentResult.data || [];
+
+    if (settingsResult.data) {
+      TARGET = Number(settingsResult.data.target_amount);
+    }
+
+    $("targetInput").value = TARGET;
     renderAll();
 
   } catch (error) {
@@ -425,24 +438,26 @@ async function loadData() {
   }
 }
 
-// SUMMARY
+/* SUMMARY */
 function renderSummary() {
   const pledged = donors.reduce((sum, d) => sum + Number(d.pledged_amount || 0), 0);
   const collected = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
   const pending = Math.max(0, pledged - collected);
-  const percent = Math.min(100, (collected / TARGET) * 100);
+  const percent = TARGET > 0 ? Math.min(100, (collected / TARGET) * 100) : 0;
 
   $("pledgedTotal").textContent = money(pledged);
   $("collectedTotal").textContent = money(collected);
   $("pendingTotal").textContent = money(pending);
   $("donorCount").textContent = donors.length;
+
+  $("targetLabel").textContent = money(TARGET);
   $("progressPercent").textContent = percent.toFixed(1) + "%";
   $("progressFill").style.width = percent + "%";
   $("progressCollected").textContent = money(collected);
   $("targetRemaining").textContent = money(Math.max(0, TARGET - collected));
 }
 
-// DONOR CARDS
+/* DONOR CARDS */
 function renderDonors() {
   const container = $("donorList");
   container.replaceChildren();
@@ -503,14 +518,20 @@ function renderDonors() {
       const paymentBtn = makeElement("button", "btn btn-primary btn-small", "＋ টাকা জমা");
       paymentBtn.type = "button";
 
+      const editDonorBtn = makeElement("button", "btn btn-warning btn-small", "✏️ Edit Donor");
+      editDonorBtn.type = "button";
+
       const historyBtn = makeElement("button", "btn btn-light btn-small", "Payment History");
       historyBtn.type = "button";
 
       const deleteBtn = makeElement("button", "btn btn-danger btn-small", "Delete Donor");
       deleteBtn.type = "button";
 
-      actions.append(paymentBtn, historyBtn, deleteBtn);
+      actions.append(paymentBtn, editDonorBtn, historyBtn, deleteBtn);
       card.appendChild(actions);
+
+      // DONOR EDIT
+      editDonorBtn.addEventListener("click", () => editDonor(donor.id));
 
       const paymentForm = makeElement("div", "payment-entry");
 
@@ -556,16 +577,14 @@ function renderDonors() {
         }
 
         savePayment.disabled = true;
-        savePayment.textContent = "Saving...";
 
         const { error } = await db.from("payments").insert({
           donor_id: donor.id,
-          amount: amount,
+          amount,
           paid_on: date
         });
 
         savePayment.disabled = false;
-        savePayment.textContent = "Payment Save করুন";
 
         if (error) {
           alert("Payment Save হয়নি: " + error.message);
@@ -596,15 +615,20 @@ function renderDonors() {
 
           right.style.display = "flex";
           right.style.alignItems = "center";
-          right.style.gap = "8px";
+          right.style.gap = "6px";
 
           right.appendChild(makeElement("strong", "", money(payment.amount)));
+
+          // PAYMENT EDIT
+          const editPaymentBtn = makeElement("button", "btn btn-warning btn-small", "Edit");
+          editPaymentBtn.type = "button";
+          editPaymentBtn.addEventListener("click", () => editPayment(payment.id));
 
           const deletePaymentBtn = makeElement("button", "btn btn-danger btn-small", "Delete");
           deletePaymentBtn.type = "button";
           deletePaymentBtn.addEventListener("click", () => deletePayment(payment.id));
 
-          right.appendChild(deletePaymentBtn);
+          right.append(editPaymentBtn, deletePaymentBtn);
           row.append(info, right);
           history.appendChild(row);
         });
@@ -629,7 +653,7 @@ function renderDonors() {
   });
 }
 
-// PUBLIC PAYMENT HISTORY
+/* PUBLIC PAYMENT HISTORY */
 function renderPaymentHistory() {
   const container = $("paymentHistory");
   container.replaceChildren();
@@ -662,12 +686,225 @@ function renderAll() {
   renderPaymentHistory();
 }
 
-// LOGIN
+/* EDIT DONOR: ADMIN ONLY */
+async function editDonor(id) {
+  if (!isAdmin) {
+    alert("শুধুমাত্র Admin Edit করতে পারবেন।");
+    return;
+  }
+
+  const donor = donors.find(d => d.id === id);
+  if (!donor) return;
+
+  const name = prompt("Donor-এর নতুন নাম লিখুন:", donor.name);
+  if (name === null) return;
+
+  const phone = prompt("নতুন মোবাইল নম্বর লিখুন:", donor.phone || "");
+  if (phone === null) return;
+
+  const pledgeText = prompt("নতুন প্রতিশ্রুতির টাকা লিখুন:", donor.pledged_amount);
+  if (pledgeText === null) return;
+
+  const pledge = Number(pledgeText);
+
+  if (!name.trim() || !Number.isFinite(pledge) || pledge < 0) {
+    alert("সঠিক নাম এবং টাকার পরিমাণ লিখুন।");
+    return;
+  }
+
+  const { error } = await db.from("donors")
+    .update({
+      name: name.trim(),
+      phone: phone.trim() || null,
+      pledged_amount: pledge
+    })
+    .eq("id", id);
+
+  if (error) {
+    alert("Donor Edit হয়নি: " + error.message);
+    return;
+  }
+
+  alert("Donor-এর তথ্য আপডেট হয়েছে।");
+  await loadData();
+}
+
+/* EDIT PAYMENT: ADMIN ONLY */
+async function editPayment(id) {
+  if (!isAdmin) {
+    alert("শুধুমাত্র Admin Edit করতে পারবেন।");
+    return;
+  }
+
+  const payment = payments.find(p => p.id === id);
+  if (!payment) return;
+
+  const amountText = prompt("নতুন জমার পরিমাণ লিখুন:", payment.amount);
+  if (amountText === null) return;
+
+  const amount = Number(amountText);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("সঠিক টাকার পরিমাণ লিখুন।");
+    return;
+  }
+
+  const date = prompt("নতুন জমার তারিখ লিখুন (YYYY-MM-DD):", payment.paid_on);
+  if (date === null) return;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    alert("তারিখ YYYY-MM-DD ফরম্যাটে লিখুন।");
+    return;
+  }
+
+  const donor = donors.find(d => d.id === payment.donor_id);
+
+  if (donor) {
+    const otherPaid = payments
+      .filter(p => p.donor_id === payment.donor_id && p.id !== id)
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const available = Number(donor.pledged_amount || 0) - otherPaid;
+
+    if (amount > available + 0.001) {
+      alert("এই Donor-এর জন্য সর্বোচ্চ জমা করা যাবে: " + money(available));
+      return;
+    }
+  }
+
+  const { error } = await db.from("payments")
+    .update({ amount, paid_on: date })
+    .eq("id", id);
+
+  if (error) {
+    alert("Payment Edit হয়নি: " + error.message);
+    return;
+  }
+
+  alert("Payment-এর তথ্য আপডেট হয়েছে।");
+  await loadData();
+}
+
+/* ADD DONOR */
+$("donorForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!isAdmin) {
+    alert("Admin Login প্রয়োজন।");
+    return;
+  }
+
+  const name = $("donorName").value.trim();
+  const phone = $("donorPhone").value.trim();
+  const amount = Number($("donorAmount").value);
+
+  if (!name || !Number.isFinite(amount) || amount < 0) {
+    showMessage("donorMessage", "সঠিক তথ্য লিখুন।", "error");
+    return;
+  }
+
+  const button = event.submitter;
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  const { error } = await db.from("donors").insert({
+    name,
+    phone: phone || null,
+    pledged_amount: amount
+  });
+
+  button.disabled = false;
+  button.textContent = "Donor যোগ করুন";
+
+  if (error) {
+    showMessage("donorMessage", "Donor যোগ হয়নি: " + error.message, "error");
+    return;
+  }
+
+  $("donorForm").reset();
+  showMessage("donorMessage", "নতুন Donor সফলভাবে যোগ হয়েছে।", "success");
+  await loadData();
+});
+
+/* EDIT TARGET: ADMIN ONLY */
+$("targetForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!isAdmin) {
+    alert("Admin Login প্রয়োজন।");
+    return;
+  }
+
+  const newTarget = Number($("targetInput").value);
+
+  if (!Number.isFinite(newTarget) || newTarget <= 0) {
+    showMessage("targetMessage", "সঠিক Target Amount লিখুন।", "error");
+    return;
+  }
+
+  const button = event.submitter;
+  button.disabled = true;
+
+  const { error } = await db.from("app_settings")
+    .update({ target_amount: newTarget })
+    .eq("id", true);
+
+  button.disabled = false;
+
+  if (error) {
+    showMessage("targetMessage", "Target Update হয়নি: " + error.message, "error");
+    return;
+  }
+
+  TARGET = newTarget;
+  renderSummary();
+  showMessage("targetMessage", "Target সফলভাবে Update হয়েছে।", "success");
+});
+
+/* DELETE DONOR */
+async function deleteDonor(id, name) {
+  if (!isAdmin) return;
+
+  if (!confirm(name + " এবং তাঁর সব Payment History মুছে ফেলবেন?")) return;
+
+  const { error } = await db.from("donors").delete().eq("id", id);
+
+  if (error) {
+    alert("Donor Delete হয়নি: " + error.message);
+    return;
+  }
+
+  alert("Donor এবং তাঁর Payment History মুছে দেওয়া হয়েছে।");
+  await loadData();
+}
+
+/* DELETE PAYMENT */
+async function deletePayment(id) {
+  if (!isAdmin) return;
+  if (!confirm("এই Payment Entry মুছে ফেলবেন?")) return;
+
+  const { error } = await db.from("payments").delete().eq("id", id);
+
+  if (error) {
+    alert("Payment Delete হয়নি: " + error.message);
+    return;
+  }
+
+  alert("Payment Entry মুছে দেওয়া হয়েছে।");
+  await loadData();
+}
+
+/* LOGIN */
 $("loginForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   const email = $("adminEmail").value.trim();
   const password = $("adminPassword").value;
+
+  if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    showMessage("loginMessage", "এই Email Admin হিসেবে অনুমোদিত নয়।", "error");
+    return;
+  }
 
   showMessage("loginMessage", "Login হচ্ছে...", "success");
 
@@ -713,87 +950,14 @@ $("logoutBtn").addEventListener("click", async () => {
 
   isAdmin = false;
   await updateAdminUI(null);
+  showMessage("loginMessage", "আপনি Logout করেছেন।", "success");
 });
 
-// ADD DONOR
-$("donorForm").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  if (!isAdmin) {
-    alert("Admin Login প্রয়োজন।");
-    return;
-  }
-
-  const name = $("donorName").value.trim();
-  const phone = $("donorPhone").value.trim();
-  const amount = Number($("donorAmount").value);
-
-  if (!name || !Number.isFinite(amount) || amount < 0) {
-    showMessage("donorMessage", "সঠিক তথ্য লিখুন।", "error");
-    return;
-  }
-
-  const button = event.submitter;
-  button.disabled = true;
-  button.textContent = "Saving...";
-
-  const { error } = await db.from("donors").insert({
-    name,
-    phone: phone || null,
-    pledged_amount: amount
-  });
-
-  button.disabled = false;
-  button.textContent = "Donor যোগ করুন";
-
-  if (error) {
-    showMessage("donorMessage", "Donor যোগ হয়নি: " + error.message, "error");
-    return;
-  }
-
-  $("donorForm").reset();
-  showMessage("donorMessage", "নতুন Donor সফলভাবে যোগ হয়েছে।", "success");
-  await loadData();
-});
-
-// DELETE DONOR
-async function deleteDonor(id, name) {
-  if (!isAdmin) return;
-
-  if (!confirm(name + " এবং তাঁর সব Payment History মুছে ফেলবেন?")) return;
-
-  const { error } = await db.from("donors").delete().eq("id", id);
-
-  if (error) {
-    alert("Donor Delete হয়নি: " + error.message);
-    return;
-  }
-
-  alert("Donor এবং তাঁর Payment History মুছে দেওয়া হয়েছে।");
-  await loadData();
-}
-
-// DELETE PAYMENT
-async function deletePayment(id) {
-  if (!isAdmin) return;
-  if (!confirm("এই Payment Entry মুছে ফেলবেন?")) return;
-
-  const { error } = await db.from("payments").delete().eq("id", id);
-
-  if (error) {
-    alert("Payment Delete হয়নি: " + error.message);
-    return;
-  }
-
-  alert("Payment Entry মুছে দেওয়া হয়েছে।");
-  await loadData();
-}
-
-// SEARCH AND REFRESH
+/* SEARCH AND REFRESH */
 $("searchInput").addEventListener("input", renderDonors);
 $("refreshBtn").addEventListener("click", loadData);
 
-// CSV DOWNLOAD
+/* CSV DOWNLOAD */
 $("csvBtn").addEventListener("click", () => {
   if (!isAdmin) return;
 
@@ -829,7 +993,7 @@ $("csvBtn").addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// REALTIME
+/* REALTIME */
 function startRealtime() {
   if (realtimeChannel) {
     db.removeChannel(realtimeChannel);
@@ -846,10 +1010,15 @@ function startRealtime() {
       schema: "public",
       table: "donors"
     }, () => loadData())
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "app_settings"
+    }, () => loadData())
     .subscribe();
 }
 
-// Public donor list view-এর জন্য automatic refresh
+/* AUTOMATIC REFRESH */
 setInterval(() => {
   if (document.visibilityState === "visible") loadData();
 }, 15000);
@@ -858,7 +1027,7 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") loadData();
 });
 
-// INITIALIZE
+/* INITIALIZE */
 async function initializeApp() {
   const { data, error } = await db.auth.getSession();
 
